@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { mapDatabaseError } from "@/lib/errorHandler";
@@ -12,8 +12,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import { HardHat, Link2, LogOut, Users, Copy, Check } from "lucide-react";
-import { format } from "date-fns";
+import { format, subDays, isAfter, startOfDay } from "date-fns";
 
 interface LaborRecord {
   id: string;
@@ -98,7 +100,30 @@ const Dashboard = () => {
     navigate("/auth");
   };
 
-  const totalLabor = records.reduce((sum, r) => sum + r.labor_count, 0);
+  const last7Days = useMemo(() => {
+    const cutoff = startOfDay(subDays(new Date(), 6));
+    return records.filter((r) => isAfter(new Date(r.date), cutoff) || startOfDay(new Date(r.date)).getTime() === cutoff.getTime());
+  }, [records]);
+
+  const weeklyAvg = useMemo(() => {
+    if (last7Days.length === 0) return 0;
+    const total = last7Days.reduce((sum, r) => sum + r.labor_count, 0);
+    return Math.round(total / last7Days.length);
+  }, [last7Days]);
+
+  const chartData = useMemo(() => {
+    return last7Days
+      .slice()
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .map((r) => ({
+        date: format(new Date(r.date), "dd MMM"),
+        labor: r.labor_count,
+      }));
+  }, [last7Days]);
+
+  const chartConfig = {
+    labor: { label: "Labor Count", color: "hsl(var(--primary))" },
+  };
 
   return (
     <div className="min-h-screen">
@@ -124,9 +149,28 @@ const Dashboard = () => {
             <p className="text-3xl font-display font-bold mt-1">{records.length}</p>
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-xs text-muted-foreground font-display uppercase tracking-wider">Total Labour</p>
-            <p className="text-3xl font-display font-bold text-primary mt-1">{totalLabor}</p>
+            <p className="text-xs text-muted-foreground font-display uppercase tracking-wider">Avg. Labor (Last 7 Days)</p>
+            <p className="text-3xl font-display font-bold text-primary mt-1">{weeklyAvg}</p>
           </div>
+        </div>
+
+        {/* Chart */}
+        <div className="bg-card border border-border rounded-lg p-6">
+          <h2 className="font-display font-semibold text-sm uppercase tracking-wider text-muted-foreground mb-4">
+            Site Strength (Last 7 Days)
+          </h2>
+          {chartData.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">No data for the last 7 days.</p>
+          ) : (
+            <ChartContainer config={chartConfig} className="aspect-[2/1] w-full">
+              <BarChart data={chartData}>
+                <XAxis dataKey="date" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 12 }} tickLine={false} axisLine={false} width={32} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="labor" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ChartContainer>
+          )}
         </div>
 
         {/* Link Generator */}
