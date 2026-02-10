@@ -7,6 +7,15 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { HardHat, Lock } from "lucide-react";
 
+const passwordRules = [
+  { test: (p: string) => p.length >= 8, label: "At least 8 characters" },
+  { test: (p: string) => /[A-Z]/.test(p), label: "One uppercase letter" },
+  { test: (p: string) => /[a-z]/.test(p), label: "One lowercase letter" },
+  { test: (p: string) => /[0-9]/.test(p), label: "One number" },
+];
+
+const isPasswordStrong = (p: string) => passwordRules.every((r) => r.test(p));
+
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,6 +26,16 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isLogin && !isPasswordStrong(password)) {
+      toast({
+        title: "Weak password",
+        description: "Password must be at least 8 characters with uppercase, lowercase, and a number.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -83,9 +102,18 @@ const Auth = () => {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
-              minLength={6}
+              minLength={8}
               className="bg-secondary border-border"
             />
+            {!isLogin && password.length > 0 && (
+              <ul className="text-xs space-y-1 mt-2">
+                {passwordRules.map((rule) => (
+                  <li key={rule.label} className={rule.test(password) ? "text-success" : "text-muted-foreground"}>
+                    {rule.test(password) ? "✓" : "○"} {rule.label}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
           <Button type="submit" className="w-full font-display font-semibold" disabled={loading}>
             <Lock className="w-4 h-4 mr-2" />
