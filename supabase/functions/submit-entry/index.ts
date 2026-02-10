@@ -6,9 +6,34 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Simple in-memory rate limiter (resets on cold start, good enough for edge)
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 10; // max requests per window
+const RATE_WINDOW_MS = 60_000; // 1 minute
+
+function isRateLimited(key: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(key);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(key, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return false;
+  }
+  entry.count++;
+  return entry.count > RATE_LIMIT;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+
+  if (isRateLimited(clientIp)) {
+    return new Response(
+      JSON.stringify({ error: "Too many requests. Please try again later." }),
+      { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 
   const supabase = createClient(
@@ -56,7 +81,7 @@ Deno.serve(async (req) => {
     }
 
     if (action === "submit") {
-      if (!date || typeof date !== "string" || !labor_count || typeof labor_count !== "number" || labor_count < 0 || labor_count > 9999) {
+      if (!date || typeof date !== "string" || typeof labor_count !== "number" || labor_count < 0 || labor_count > 9999) {
         return new Response(
           JSON.stringify({ error: "Invalid submission data" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -71,10 +96,10 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Check token is valid and not used
+      // Check token is valid and get owner
       const { data: token, error: tokenErr } = await supabase
         .from("active_tokens")
-        .select("is_used")
+        .select("is_used, created_by")
         .eq("token_uuid", token_uuid)
         .maybeSingle();
 
@@ -85,12 +110,13 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Insert record
+      // Insert record with the token owner's user_id
       const { error: insertErr } = await supabase
         .from("labor_records")
-        .insert({ date, labor_count });
+        .insert({ date, labor_count, user_id: token.created_by });
 
       if (insertErr) {
+        console.error("Insert error:", insertErr);
         return new Response(
           JSON.stringify({ error: "Failed to save record" }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

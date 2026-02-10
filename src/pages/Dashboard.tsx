@@ -65,9 +65,14 @@ const Dashboard = () => {
 
   const generateLink = async () => {
     setGenerating(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      navigate("/auth");
+      return;
+    }
     const { data, error } = await supabase
       .from("active_tokens")
-      .insert({})
+      .insert({ created_by: session.user.id })
       .select("token_uuid")
       .single();
 
