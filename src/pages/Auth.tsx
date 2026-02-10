@@ -37,9 +37,10 @@ const Auth = () => {
         });
       }
     } catch (error: any) {
+      const isAuthError = error?.message?.includes("Invalid login") || error?.message?.includes("already registered");
       toast({
         title: "Error",
-        description: error.message,
+        description: isAuthError ? error.message : "An error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
