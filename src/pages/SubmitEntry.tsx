@@ -43,51 +43,51 @@ const SubmitEntry = () => {
       return;
     }
 
-    const { data, error } = await supabase
-      .from("active_tokens")
-      .select("is_used")
-      .eq("token_uuid", tokenId)
-      .maybeSingle();
+    try {
+      const res = await supabase.functions.invoke("submit-entry", {
+        body: { action: "validate", token_uuid: tokenId },
+      });
 
-    if (error || !data || data.is_used) {
+      if (res.error || !res.data?.valid) {
+        setTokenValid(false);
+      } else {
+        setTokenValid(true);
+      }
+    } catch {
       setTokenValid(false);
-    } else {
-      setTokenValid(true);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!laborCount || parseInt(laborCount) < 0) {
+    const count = parseInt(laborCount);
+    if (!laborCount || count < 0 || count > 9999) {
       toast({ title: "Invalid count", description: "Please enter a valid labour count.", variant: "destructive" });
       return;
     }
 
     setSubmitting(true);
 
-    // Insert record
-    const { error: insertError } = await supabase.from("labor_records").insert({
-      date: format(date, "yyyy-MM-dd"),
-      labor_count: parseInt(laborCount),
-    });
+    try {
+      const res = await supabase.functions.invoke("submit-entry", {
+        body: {
+          action: "submit",
+          token_uuid: tokenId,
+          date: format(date, "yyyy-MM-dd"),
+          labor_count: count,
+        },
+      });
 
-    if (insertError) {
-      toast({ title: "Error", description: insertError.message, variant: "destructive" });
-      setSubmitting(false);
-      return;
+      if (res.error || !res.data?.success) {
+        toast({ title: "Error", description: res.data?.error || "Submission failed", variant: "destructive" });
+        setSubmitting(false);
+        return;
+      }
+
+      setSubmitted(true);
+    } catch {
+      toast({ title: "Error", description: "Submission failed", variant: "destructive" });
     }
-
-    // Burn token
-    const { error: burnError } = await supabase
-      .from("active_tokens")
-      .update({ is_used: true })
-      .eq("token_uuid", tokenId!);
-
-    if (burnError) {
-      console.error("Token burn error:", burnError);
-    }
-
-    setSubmitted(true);
     setSubmitting(false);
   };
 
