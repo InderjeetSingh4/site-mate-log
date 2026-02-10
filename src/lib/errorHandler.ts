@@ -1,5 +1,7 @@
 export const mapDatabaseError = (error: { code?: string; message?: string }): string => {
-  console.error("Database error:", error);
+  if (import.meta.env.DEV) {
+    console.error("Database error:", error);
+  }
 
   if (error.code === "PGRST301" || error.message?.includes("row-level security")) {
     return "You do not have permission to perform this action.";
