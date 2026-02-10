@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { mapDatabaseError } from "@/lib/errorHandler";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -31,14 +32,22 @@ const Dashboard = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    checkAuth();
-    fetchRecords();
-  }, []);
+    const init = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/auth");
+        return;
+      }
+      fetchRecords();
+    };
 
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) navigate("/auth");
-  };
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) navigate("/auth");
+    });
+
+    init();
+    return () => subscription.unsubscribe();
+  }, []);
 
   const fetchRecords = async () => {
     const { data, error } = await supabase
@@ -47,7 +56,7 @@ const Dashboard = () => {
       .order("date", { ascending: false });
 
     if (error) {
-      toast({ title: "Error fetching records", description: error.message, variant: "destructive" });
+      toast({ title: "Error fetching records", description: mapDatabaseError(error), variant: "destructive" });
     } else {
       setRecords(data || []);
     }
@@ -63,7 +72,7 @@ const Dashboard = () => {
       .single();
 
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: "Error", description: mapDatabaseError(error), variant: "destructive" });
     } else {
       const url = `${window.location.origin}/submit/${data.token_uuid}`;
       setGeneratedLink(url);
