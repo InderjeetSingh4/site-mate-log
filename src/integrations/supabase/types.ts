@@ -17,18 +17,21 @@ export type Database = {
       active_tokens: {
         Row: {
           created_at: string
+          created_by: string | null
           id: string
           is_used: boolean
           token_uuid: string
         }
         Insert: {
           created_at?: string
+          created_by?: string | null
           id?: string
           is_used?: boolean
           token_uuid?: string
         }
         Update: {
           created_at?: string
+          created_by?: string | null
           id?: string
           is_used?: boolean
           token_uuid?: string
@@ -41,18 +44,21 @@ export type Database = {
           id: string
           labor_count: number
           submitted_at: string
+          user_id: string | null
         }
         Insert: {
           date: string
           id?: string
           labor_count: number
           submitted_at?: string
+          user_id?: string | null
         }
         Update: {
           date?: string
           id?: string
           labor_count?: number
           submitted_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
