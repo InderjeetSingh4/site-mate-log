@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis } from "recharts";
 import { HardHat, Link2, LogOut, Users, Copy, Check, Settings, Download } from "lucide-react";
 import { format, subDays, isAfter, startOfDay } from "date-fns";
 
@@ -144,19 +144,21 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border px-4 py-4">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
+      <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <HardHat className="w-6 h-6 text-primary" />
-            <h1 className="font-display font-bold text-lg tracking-tight">CivilSite</h1>
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+              <HardHat className="w-4 h-4 text-primary-foreground" />
+            </div>
+            <h1 className="font-semibold text-lg tracking-tight">CivilSite</h1>
           </div>
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="text-muted-foreground">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="text-muted-foreground hover:text-foreground">
               <Settings className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground">
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground hover:text-foreground">
               <LogOut className="w-4 h-4 mr-2" />
               Sign Out
             </Button>
@@ -164,51 +166,51 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6 animate-fade-in">
         {/* Stats */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-xs text-muted-foreground font-display uppercase tracking-wider">Total Entries</p>
-            <p className="text-3xl font-display font-bold mt-1">{records.length}</p>
+          <div className="bg-card rounded-xl border border-border p-5 shadow-soft">
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total Entries</p>
+            <p className="text-3xl font-bold mt-2 tracking-tight">{records.length}</p>
           </div>
-          <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-xs text-muted-foreground font-display uppercase tracking-wider">Average Labour (Last 7 Days)</p>
-            <p className="text-3xl font-display font-bold text-primary mt-1">{weeklyAvg}</p>
+          <div className="bg-card rounded-xl border border-border p-5 shadow-soft">
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Average Labour (Last 7 Days)</p>
+            <p className="text-3xl font-bold text-primary mt-2 tracking-tight">{weeklyAvg}</p>
           </div>
         </div>
 
         {/* Chart */}
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h2 className="font-display font-semibold text-sm uppercase tracking-wider text-muted-foreground mb-4">
+        <div className="bg-card rounded-xl border border-border p-6 shadow-soft">
+          <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider mb-5">
             Site Strength (Last 7 Days)
           </h2>
           {chartData.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No data for the last 7 days.</p>
+            <p className="text-center text-muted-foreground py-8 text-sm">No data for the last 7 days.</p>
           ) : (
             <ChartContainer config={chartConfig} className="aspect-[2/1] w-full">
               <BarChart data={chartData}>
-                <XAxis dataKey="date" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 12 }} tickLine={false} axisLine={false} width={32} />
+                <XAxis dataKey="date" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={32} />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="labor" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="labor" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ChartContainer>
           )}
         </div>
 
         {/* Link Generator */}
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h2 className="font-display font-semibold text-sm uppercase tracking-wider text-muted-foreground mb-4">
+        <div className="bg-card rounded-xl border border-border p-6 shadow-soft">
+          <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider mb-4">
             Generate Entry Link
           </h2>
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button onClick={generateLink} disabled={generating} className="font-display font-semibold">
+            <Button onClick={generateLink} disabled={generating} className="font-medium">
               <Link2 className="w-4 h-4 mr-2" />
               {generating ? "Generating..." : "Generate New Entry Link"}
             </Button>
             {generatedLink && (
               <div className="flex items-center gap-2 flex-1 min-w-0">
-                <code className="text-xs bg-secondary px-3 py-2 rounded border border-border truncate flex-1 font-mono">
+                <code className="text-xs bg-muted px-3 py-2 rounded-lg border border-border truncate flex-1 font-mono">
                   {generatedLink}
                 </code>
                 <Button variant="outline" size="icon" onClick={copyLink}>
@@ -220,32 +222,32 @@ const Dashboard = () => {
         </div>
 
         {/* Records Table */}
-        <div className="bg-card border border-border rounded-lg overflow-hidden">
+        <div className="bg-card rounded-xl border border-border overflow-hidden shadow-soft">
           <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-            <h2 className="font-display font-semibold text-sm uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+            <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
               <Users className="w-4 h-4" />
               Labour Records
             </h2>
             {records.length > 0 && (
-              <Button variant="outline" size="sm" onClick={exportCSV} className="font-display">
+              <Button variant="outline" size="sm" onClick={exportCSV} className="font-medium">
                 <Download className="w-4 h-4 mr-2" />
                 Download Excel Report
               </Button>
             )}
           </div>
           {loading ? (
-            <div className="p-8 text-center text-muted-foreground">Loading records...</div>
+            <div className="p-8 text-center text-muted-foreground text-sm">Loading records...</div>
           ) : records.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground">
+            <div className="p-12 text-center text-muted-foreground text-sm">
               No entries yet. Generate a link and share it with your mate.
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow className="border-border hover:bg-transparent">
-                  <TableHead className="font-display text-xs uppercase tracking-wider">Date</TableHead>
-                  <TableHead className="font-display text-xs uppercase tracking-wider text-right">Labour Count</TableHead>
-                  <TableHead className="font-display text-xs uppercase tracking-wider text-right">Submitted</TableHead>
+                  <TableHead className="text-xs font-medium uppercase tracking-wider">Date</TableHead>
+                  <TableHead className="text-xs font-medium uppercase tracking-wider text-right">Labour Count</TableHead>
+                  <TableHead className="text-xs font-medium uppercase tracking-wider text-right">Submitted</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
