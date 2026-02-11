@@ -52,6 +52,21 @@ export type Database = {
           },
         ]
       }
+      app_config: {
+        Row: {
+          id: string
+          signup_enabled: boolean
+        }
+        Insert: {
+          id?: string
+          signup_enabled?: boolean
+        }
+        Update: {
+          id?: string
+          signup_enabled?: boolean
+        }
+        Relationships: []
+      }
       labor_records: {
         Row: {
           date: string

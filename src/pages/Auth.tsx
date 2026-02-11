@@ -14,6 +14,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [signupEnabled, setSignupEnabled] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -24,6 +25,17 @@ const Auth = () => {
       if (session) navigate("/select-ulb");
     };
     checkSession();
+
+    // Check if signup is still enabled globally
+    const checkSignup = async () => {
+      const { data } = await supabase
+        .from("app_config")
+        .select("signup_enabled")
+        .eq("id", "main")
+        .single();
+      if (data) setSignupEnabled(data.signup_enabled);
+    };
+    checkSignup();
   }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,6 +50,13 @@ const Auth = () => {
           options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
+
+        // Disable signup globally after first registration
+        await supabase
+          .from("app_config")
+          .update({ signup_enabled: false })
+          .eq("id", "main");
+
         toast({
           title: "Check your email",
           description: "A confirmation link has been sent to your email address.",
@@ -101,7 +120,7 @@ const Auth = () => {
             </Button>
           </form>
 
-          {!isLoggedIn && (
+          {!isLoggedIn && signupEnabled && (
             <div className="mt-4 text-center">
               <button
                 type="button"
