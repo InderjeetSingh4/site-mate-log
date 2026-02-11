@@ -5,7 +5,18 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { HardHat, ArrowLeft, Lock, Mail } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { HardHat, ArrowLeft, Lock, Mail, Trash2 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 
 const passwordRules = [
@@ -25,6 +36,8 @@ const Settings = () => {
 
   const [newEmail, setNewEmail] = useState("");
   const [emailLoading, setEmailLoading] = useState(false);
+
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const isPasswordStrong = passwordRules.every((r) => r.test(newPassword));
 
@@ -70,6 +83,28 @@ const Settings = () => {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    setDeleteLoading(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      navigate("/auth");
+      return;
+    }
+
+    // Delete user's data first
+    const userId = session.user.id;
+    await supabase.from("labor_records").delete().eq("user_id", userId);
+    await supabase.from("active_tokens").delete().eq("created_by", userId);
+    await supabase.from("site_folders").delete().eq("user_id", userId);
+
+    // Sign out
+    await supabase.auth.signOut();
+    sessionStorage.removeItem("selected_ulb");
+    setDeleteLoading(false);
+    toast({ title: "Account data deleted", description: "Your data has been removed. Contact support to fully delete your auth account." });
+    navigate("/auth");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10">
@@ -78,23 +113,23 @@ const Settings = () => {
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <HardHat className="w-4 h-4 text-primary-foreground" />
             </div>
-            <h1 className="font-semibold text-lg tracking-tight">CivilSite</h1>
+            <h1 className="font-semibold text-lg tracking-tight text-foreground">NatureSection</h1>
           </div>
           <div className="flex items-center gap-1">
             <ThemeToggle />
-            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="text-foreground hover:text-foreground/80">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
           </div>
         </div>
       </header>
 
       <main className="max-w-lg mx-auto px-4 sm:px-6 py-8 space-y-6 animate-fade-in">
-        <h2 className="font-bold text-2xl tracking-tight">Account Settings</h2>
+        <h2 className="font-bold text-2xl tracking-tight text-foreground">Account Settings</h2>
 
         <div className="bg-card rounded-xl border border-border p-6 space-y-4 shadow-soft">
-          <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+          <h3 className="font-semibold text-sm uppercase tracking-wider text-foreground/70 flex items-center gap-2">
             <Lock className="w-4 h-4" />
             Change Password
           </h3>
@@ -107,7 +142,7 @@ const Settings = () => {
           {newPassword && (
             <ul className="space-y-1 text-xs">
               {passwordRules.map((rule) => (
-                <li key={rule.label} className={rule.test(newPassword) ? "text-success" : "text-muted-foreground"}>
+                <li key={rule.label} className={rule.test(newPassword) ? "text-success" : "text-foreground/50"}>
                   {rule.test(newPassword) ? "✓" : "○"} {rule.label}
                 </li>
               ))}
@@ -128,7 +163,7 @@ const Settings = () => {
         </div>
 
         <div className="bg-card rounded-xl border border-border p-6 space-y-4 shadow-soft">
-          <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+          <h3 className="font-semibold text-sm uppercase tracking-wider text-foreground/70 flex items-center gap-2">
             <Mail className="w-4 h-4" />
             Change Email
           </h3>
@@ -141,6 +176,38 @@ const Settings = () => {
           <Button onClick={handleUpdateEmail} disabled={emailLoading} className="font-medium w-full">
             {emailLoading ? "Updating..." : "Update Email"}
           </Button>
+        </div>
+
+        <div className="bg-card rounded-xl border border-border p-6 space-y-4 shadow-soft">
+          <h3 className="font-semibold text-sm uppercase tracking-wider text-destructive flex items-center gap-2">
+            <Trash2 className="w-4 h-4" />
+            Danger Zone
+          </h3>
+          <p className="text-sm text-foreground/70">
+            Permanently delete your account and all associated data. This action cannot be undone.
+          </p>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" className="w-full font-medium" disabled={deleteLoading}>
+                <Trash2 className="w-4 h-4 mr-2" />
+                {deleteLoading ? "Deleting..." : "Delete Account"}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete all your folders, labor records, and tokens. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteAccount} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Yes, delete my account
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </main>
     </div>

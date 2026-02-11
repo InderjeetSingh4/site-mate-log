@@ -91,21 +91,19 @@ const SubmitEntry = () => {
     setSubmitting(false);
   };
 
-  // Loading state
   if (tokenValid === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="text-center animate-fade-in">
           <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mx-auto animate-pulse-soft">
             <HardHat className="w-6 h-6 text-primary-foreground" />
           </div>
-          <p className="text-muted-foreground mt-4 text-sm">Validating link...</p>
+          <p className="text-foreground/70 mt-4 text-sm">Validating link...</p>
         </div>
       </div>
     );
   }
 
-  // Invalid/used token
   if (!tokenValid) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4 bg-background">
@@ -114,7 +112,7 @@ const SubmitEntry = () => {
             <HardHat className="w-7 h-7 text-destructive" />
           </div>
           <h1 className="text-2xl font-bold mb-2">Link Expired</h1>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-foreground/70 text-sm">
             This entry link has already been used or is invalid. Contact the site owner for a new link.
           </p>
         </div>
@@ -122,7 +120,6 @@ const SubmitEntry = () => {
     );
   }
 
-  // Success state
   if (submitted) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4 bg-background">
@@ -131,11 +128,11 @@ const SubmitEntry = () => {
             <CheckCircle2 className="w-7 h-7 text-success" />
           </div>
           <h1 className="text-2xl font-bold mb-2">Report Submitted</h1>
-          <p className="text-muted-foreground text-sm mb-6">
+          <p className="text-foreground/70 text-sm mb-6">
             Daily labour count has been recorded successfully.
           </p>
           <div className="bg-card border border-border rounded-xl p-5 shadow-soft">
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Auto-redirect in</p>
+            <p className="text-xs text-foreground/70 font-medium uppercase tracking-wider">Auto-redirect in</p>
             <p className="text-4xl font-bold text-primary mt-2">{countdown}s</p>
           </div>
         </div>
@@ -143,7 +140,6 @@ const SubmitEntry = () => {
     );
   }
 
-  // Entry form
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-background">
       <div className="w-full max-w-sm animate-fade-in">
@@ -152,10 +148,10 @@ const SubmitEntry = () => {
             <HardHat className="w-7 h-7 text-primary-foreground" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight">Daily Report</h1>
-          <p className="text-muted-foreground text-sm mt-1">Submit today's labour count</p>
+          <p className="text-foreground/70 text-sm mt-1">Submit today's labour count</p>
         </div>
 
-        <div className="bg-card rounded-xl border border-border p-6 shadow-card">
+        <div className="bg-card rounded-xl border border-border p-5 sm:p-6 shadow-card">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label className="text-xs font-medium uppercase tracking-wider">Date</Label>
@@ -165,7 +161,7 @@ const SubmitEntry = () => {
                     variant="outline"
                     className={cn(
                       "w-full justify-start text-left font-mono",
-                      !date && "text-muted-foreground"
+                      !date && "text-foreground/60"
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
@@ -197,7 +193,7 @@ const SubmitEntry = () => {
                 onChange={(e) => setLaborCount(e.target.value)}
                 placeholder="0"
                 required
-                className="text-3xl font-bold h-16 text-center"
+                className="text-2xl sm:text-3xl font-bold h-14 sm:h-16 text-center"
               />
             </div>
 
