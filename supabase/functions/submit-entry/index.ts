@@ -6,10 +6,9 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Simple in-memory rate limiter (resets on cold start, good enough for edge)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT = 10; // max requests per window
-const RATE_WINDOW_MS = 60_000; // 1 minute
+const RATE_LIMIT = 10;
+const RATE_WINDOW_MS = 60_000;
 
 function isRateLimited(key: string): boolean {
   const now = Date.now();
@@ -51,7 +50,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Validate UUID format
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(token_uuid)) {
       return new Response(
@@ -88,7 +86,6 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Validate date format
       if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
         return new Response(
           JSON.stringify({ error: "Invalid date format" }),
@@ -96,10 +93,10 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Check token is valid and get owner
+      // Check token is valid and get owner + folder
       const { data: token, error: tokenErr } = await supabase
         .from("active_tokens")
-        .select("is_used, created_by")
+        .select("is_used, created_by, folder_id")
         .eq("token_uuid", token_uuid)
         .maybeSingle();
 
@@ -110,10 +107,19 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Insert record with the token owner's user_id
+      // Insert record with the token owner's user_id and folder_id
+      const insertData: Record<string, unknown> = {
+        date,
+        labor_count,
+        user_id: token.created_by,
+      };
+      if (token.folder_id) {
+        insertData.folder_id = token.folder_id;
+      }
+
       const { error: insertErr } = await supabase
         .from("labor_records")
-        .insert({ date, labor_count, user_id: token.created_by });
+        .insert(insertData);
 
       if (insertErr) {
         console.error("Insert error:", insertErr);
