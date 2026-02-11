@@ -154,7 +154,7 @@ const Dashboard = () => {
             <p className="text-3xl font-display font-bold mt-1">{records.length}</p>
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-xs text-muted-foreground font-display uppercase tracking-wider">Avg. Labor (Last 7 Days)</p>
+            <p className="text-xs text-muted-foreground font-display uppercase tracking-wider">Average Labour (Last 7 Days)</p>
             <p className="text-3xl font-display font-bold text-primary mt-1">{weeklyAvg}</p>
           </div>
         </div>
