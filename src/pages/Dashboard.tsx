@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
-import { HardHat, Link2, LogOut, Users, Copy, Check } from "lucide-react";
+import { HardHat, Link2, LogOut, Users, Copy, Check, Settings } from "lucide-react";
 import { format, subDays, isAfter, startOfDay } from "date-fns";
 
 interface LaborRecord {
@@ -134,10 +134,15 @@ const Dashboard = () => {
             <HardHat className="w-6 h-6 text-primary" />
             <h1 className="font-display font-bold text-lg tracking-tight">CivilSite</h1>
           </div>
-          <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground">
-            <LogOut className="w-4 h-4 mr-2" />
-            Sign Out
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="text-muted-foreground">
+              <Settings className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground">
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
+          </div>
         </div>
       </header>
 
