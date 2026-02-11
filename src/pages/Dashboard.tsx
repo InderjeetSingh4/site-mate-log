@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis } from "recharts";
-import { HardHat, Link2, LogOut, Users, Copy, Check, Settings, Download } from "lucide-react";
+import { HardHat, Link2, LogOut, Users, Copy, Check, Settings, Download, ArrowLeftRight } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import SiteFolderSidebar, { type SiteFolder } from "@/components/SiteFolderSidebar";
 import { format, subDays, isAfter, startOfDay } from "date-fns";
@@ -200,6 +200,9 @@ const Dashboard = () => {
             <span className="hidden md:inline text-sm font-medium text-foreground bg-primary/10 px-3 py-1 rounded-full">
               Workspace: {selectedUlb}
             </span>
+            <Button variant="outline" size="sm" onClick={handleSwitchUlb} className="hidden md:inline-flex lg:hidden text-foreground">
+              <ArrowLeftRight className="w-4 h-4 mr-1" /> Switch ULB
+            </Button>
             <ThemeToggle />
             <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="text-foreground hover:text-foreground/80">
               <Settings className="w-4 h-4" />
