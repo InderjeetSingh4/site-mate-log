@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
-import { HardHat, Link2, LogOut, Users, Copy, Check, Settings } from "lucide-react";
+import { HardHat, Link2, LogOut, Users, Copy, Check, Settings, Download } from "lucide-react";
 import { format, subDays, isAfter, startOfDay } from "date-fns";
 
 interface LaborRecord {
@@ -98,6 +98,24 @@ const Dashboard = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/auth");
+  };
+
+  const exportCSV = () => {
+    if (records.length === 0) return;
+    const sorted = [...records].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const header = "Date,Labour Count,Day of Week";
+    const rows = sorted.map((r) => {
+      const d = new Date(r.date);
+      return `${format(d, "dd/MM/yyyy")},${r.labor_count},${format(d, "EEEE")}`;
+    });
+    const csv = [header, ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Site_Labour_Report_${format(new Date(), "dd-MM-yyyy")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const last7Days = useMemo(() => {
@@ -203,11 +221,17 @@ const Dashboard = () => {
 
         {/* Records Table */}
         <div className="bg-card border border-border rounded-lg overflow-hidden">
-          <div className="px-6 py-4 border-b border-border">
+          <div className="px-6 py-4 border-b border-border flex items-center justify-between">
             <h2 className="font-display font-semibold text-sm uppercase tracking-wider text-muted-foreground flex items-center gap-2">
               <Users className="w-4 h-4" />
               Labour Records
             </h2>
+            {records.length > 0 && (
+              <Button variant="outline" size="sm" onClick={exportCSV} className="font-display">
+                <Download className="w-4 h-4 mr-2" />
+                Download Excel Report
+              </Button>
+            )}
           </div>
           {loading ? (
             <div className="p-8 text-center text-muted-foreground">Loading records...</div>
