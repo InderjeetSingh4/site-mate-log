@@ -68,58 +68,56 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-background">
+      <div className="w-full max-w-sm animate-fade-in">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-lg bg-primary/10 border border-primary/20 mb-4">
-            <HardHat className="w-8 h-8 text-primary" />
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-primary mb-4 shadow-card">
+            <HardHat className="w-7 h-7 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-display font-bold tracking-tight">
-            CivilSite
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight">CivilSite</h1>
           <p className="text-muted-foreground text-sm mt-1">Labor Tracker</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="owner@site.com"
-              required
-              className="bg-secondary border-border"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              minLength={8}
-              className="bg-secondary border-border"
-            />
-            {!isLogin && password.length > 0 && (
-              <ul className="text-xs space-y-1 mt-2">
-                {passwordRules.map((rule) => (
-                  <li key={rule.label} className={rule.test(password) ? "text-success" : "text-muted-foreground"}>
-                    {rule.test(password) ? "✓" : "○"} {rule.label}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <Button type="submit" className="w-full font-display font-semibold" disabled={loading}>
-            <Lock className="w-4 h-4 mr-2" />
-            {loading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
-          </Button>
-        </form>
+        <div className="bg-card rounded-xl border border-border p-6 shadow-card">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="owner@site.com"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                minLength={8}
+              />
+              {!isLogin && password.length > 0 && (
+                <ul className="text-xs space-y-1 mt-2">
+                  {passwordRules.map((rule) => (
+                    <li key={rule.label} className={rule.test(password) ? "text-success" : "text-muted-foreground"}>
+                      {rule.test(password) ? "✓" : "○"} {rule.label}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <Button type="submit" className="w-full font-medium" disabled={loading}>
+              <Lock className="w-4 h-4 mr-2" />
+              {loading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
+            </Button>
+          </form>
+        </div>
 
         <button
           onClick={() => setIsLogin(!isLogin)}

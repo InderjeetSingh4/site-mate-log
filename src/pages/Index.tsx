@@ -19,8 +19,10 @@ const Index = () => {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <HardHat className="w-10 h-10 text-primary animate-pulse-amber" />
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center animate-pulse-soft">
+        <HardHat className="w-5 h-5 text-primary-foreground" />
+      </div>
     </div>
   );
 };
