@@ -10,7 +10,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { FolderPlus, Folder, Menu, Trash2 } from "lucide-react";
+import { FolderPlus, Folder, Menu, Trash2, ArrowLeftRight } from "lucide-react";
 
 export interface SiteFolder {
   id: string;
@@ -25,6 +25,7 @@ interface SiteFolderSidebarProps {
   onSelectFolder: (folderId: string | null) => void;
   onFoldersChange: () => void;
   mode: "mobile" | "desktop";
+  onSwitchUlb?: () => void;
 }
 
 const FolderList = ({
@@ -50,7 +51,8 @@ const FolderList = ({
     setCreating(true);
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
-    const { error } = await supabase.from("site_folders").insert({ name, user_id: session.user.id });
+    const ulb = sessionStorage.getItem("selected_ulb") || "KishangarhBas";
+    const { error } = await supabase.from("site_folders").insert({ name, user_id: session.user.id, ulb });
     if (error) {
       toast({ title: "Error", description: "Failed to create folder", variant: "destructive" });
     } else {
@@ -121,7 +123,7 @@ const FolderList = ({
   );
 };
 
-const SiteFolderSidebar = ({ folders, selectedFolderId, onSelectFolder, onFoldersChange, mode }: SiteFolderSidebarProps) => {
+const SiteFolderSidebar = ({ folders, selectedFolderId, onSelectFolder, onFoldersChange, mode, onSwitchUlb }: SiteFolderSidebarProps) => {
   const [open, setOpen] = useState(false);
 
   if (mode === "desktop") {
@@ -134,6 +136,11 @@ const SiteFolderSidebar = ({ folders, selectedFolderId, onSelectFolder, onFolder
           onSelectFolder={onSelectFolder}
           onFoldersChange={onFoldersChange}
         />
+        {onSwitchUlb && (
+          <Button variant="outline" size="sm" onClick={onSwitchUlb} className="w-full mt-6">
+            <ArrowLeftRight className="w-4 h-4 mr-2" /> Switch ULB
+          </Button>
+        )}
       </div>
     );
   }
@@ -141,7 +148,7 @@ const SiteFolderSidebar = ({ folders, selectedFolderId, onSelectFolder, onFolder
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="text-white/70 hover:text-white dark:text-muted-foreground lg:hidden">
+        <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-foreground lg:hidden">
           <Menu className="w-5 h-5" />
         </Button>
       </SheetTrigger>
@@ -156,6 +163,11 @@ const SiteFolderSidebar = ({ folders, selectedFolderId, onSelectFolder, onFolder
           onFoldersChange={onFoldersChange}
           onClose={() => setOpen(false)}
         />
+        {onSwitchUlb && (
+          <Button variant="outline" size="sm" onClick={() => { setOpen(false); onSwitchUlb(); }} className="w-full mt-4">
+            <ArrowLeftRight className="w-4 h-4 mr-2" /> Switch ULB
+          </Button>
+        )}
       </SheetContent>
     </Sheet>
   );

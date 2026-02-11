@@ -93,10 +93,10 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Check token is valid and get owner + folder
+      // Check token is valid and get owner + folder + ulb
       const { data: token, error: tokenErr } = await supabase
         .from("active_tokens")
-        .select("is_used, created_by, folder_id")
+        .select("is_used, created_by, folder_id, ulb")
         .eq("token_uuid", token_uuid)
         .maybeSingle();
 
@@ -107,11 +107,12 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Insert record with the token owner's user_id and folder_id
+      // Insert record with the token owner's user_id, folder_id, and ulb
       const insertData: Record<string, unknown> = {
         date,
         labor_count,
         user_id: token.created_by,
+        ulb: token.ulb || "KishangarhBas",
       };
       if (token.folder_id) {
         insertData.folder_id = token.folder_id;
