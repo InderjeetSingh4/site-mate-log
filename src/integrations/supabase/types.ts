@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          folder_id: string | null
           id: string
           is_used: boolean
           token_uuid: string
@@ -25,6 +26,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          folder_id?: string | null
           id?: string
           is_used?: boolean
           token_uuid?: string
@@ -32,15 +34,25 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          folder_id?: string | null
           id?: string
           is_used?: boolean
           token_uuid?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "active_tokens_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "site_folders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       labor_records: {
         Row: {
           date: string
+          folder_id: string | null
           id: string
           labor_count: number
           submitted_at: string
@@ -48,6 +60,7 @@ export type Database = {
         }
         Insert: {
           date: string
+          folder_id?: string | null
           id?: string
           labor_count: number
           submitted_at?: string
@@ -55,10 +68,40 @@ export type Database = {
         }
         Update: {
           date?: string
+          folder_id?: string | null
           id?: string
           labor_count?: number
           submitted_at?: string
           user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "labor_records_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "site_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      site_folders: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
         }
         Relationships: []
       }
