@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis } from "recharts";
-import { HardHat, Link2, LogOut, Users, Copy, Check, Settings, Download, ArrowLeftRight } from "lucide-react";
+import { HardHat, Link2, LogOut, Users, Copy, Check, Settings, Download } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import SiteFolderSidebar, { type SiteFolder } from "@/components/SiteFolderSidebar";
 import { format, subDays, isAfter, startOfDay } from "date-fns";
@@ -181,8 +181,8 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gradient-to-t from-[hsl(220,60%,20%)] via-[hsl(220,50%,40%)] to-[hsl(220,30%,85%)] dark:from-[hsl(220,30%,8%)] dark:via-[hsl(220,25%,15%)] dark:to-[hsl(220,20%,25%)]">
       {/* Header */}
       <header className="border-b border-border/50 bg-card/80 backdrop-blur-sm sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-3">
             <SiteFolderSidebar
               folders={folders}
               selectedFolderId={selectedFolderId}
@@ -194,21 +194,17 @@ const Dashboard = () => {
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <HardHat className="w-4 h-4 text-primary-foreground" />
             </div>
-            <h1 className="font-semibold text-lg tracking-tight text-foreground hidden sm:block">NatureSection</h1>
+            <h1 className="font-semibold text-base sm:text-lg tracking-tight text-foreground hidden sm:block">NatureSection</h1>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 sm:gap-1">
             <span className="hidden md:inline text-sm font-medium text-foreground bg-primary/10 px-3 py-1 rounded-full">
               Workspace: {selectedUlb}
             </span>
             <ThemeToggle />
-            <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="text-foreground/70 hover:text-foreground">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="text-foreground hover:text-foreground/80">
               <Settings className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleSwitchUlb} className="text-foreground/70 hover:text-foreground hidden sm:flex">
-              <ArrowLeftRight className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Switch ULB</span>
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-foreground/70 hover:text-foreground">
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-foreground hover:text-foreground/80">
               <LogOut className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">Sign Out</span>
             </Button>
@@ -229,36 +225,36 @@ const Dashboard = () => {
           />
         </aside>
 
-        <main className="flex-1 px-4 sm:px-6 py-8 space-y-6 animate-fade-in max-w-4xl">
+        <main className="flex-1 px-3 sm:px-6 py-6 sm:py-8 space-y-4 sm:space-y-6 animate-fade-in max-w-4xl w-full">
           {/* Current folder label */}
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-foreground tracking-tight">{selectedFolderName}</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">{selectedFolderName}</h2>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-card/90 backdrop-blur-sm rounded-xl border border-border/50 p-5 shadow-soft">
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total Entries</p>
-              <p className="text-3xl font-bold mt-2 tracking-tight">{filteredRecords.length}</p>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <div className="bg-card/90 backdrop-blur-sm rounded-xl border border-border/50 p-4 sm:p-5 shadow-soft">
+              <p className="text-xs text-foreground/70 font-medium uppercase tracking-wider">Total Entries</p>
+              <p className="text-2xl sm:text-3xl font-bold mt-2 tracking-tight">{filteredRecords.length}</p>
             </div>
-            <div className="bg-card/90 backdrop-blur-sm rounded-xl border border-border/50 p-5 shadow-soft">
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Avg Labour (7d)</p>
-              <p className="text-3xl font-bold text-primary mt-2 tracking-tight">{weeklyAvg}</p>
+            <div className="bg-card/90 backdrop-blur-sm rounded-xl border border-border/50 p-4 sm:p-5 shadow-soft">
+              <p className="text-xs text-foreground/70 font-medium uppercase tracking-wider">Avg Labour (7d)</p>
+              <p className="text-2xl sm:text-3xl font-bold text-primary mt-2 tracking-tight">{weeklyAvg}</p>
             </div>
           </div>
 
           {/* Chart */}
-          <div className="bg-card/90 backdrop-blur-sm rounded-xl border border-border/50 p-6 shadow-soft">
-            <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider mb-5">
+          <div className="bg-card/90 backdrop-blur-sm rounded-xl border border-border/50 p-4 sm:p-6 shadow-soft">
+            <h2 className="font-semibold text-sm text-foreground/70 uppercase tracking-wider mb-4 sm:mb-5">
               Site Strength (Last 7 Days)
             </h2>
             {chartData.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8 text-sm">No data for the last 7 days.</p>
+              <p className="text-center text-foreground/60 py-8 text-sm">No data for the last 7 days.</p>
             ) : (
               <ChartContainer config={chartConfig} className="aspect-[2/1] w-full">
                 <BarChart data={chartData}>
-                  <XAxis dataKey="date" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={32} />
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: "hsl(var(--foreground))" }} tickLine={false} axisLine={false} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "hsl(var(--foreground))" }} tickLine={false} axisLine={false} width={32} />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Bar dataKey="labor" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
                 </BarChart>
@@ -268,21 +264,21 @@ const Dashboard = () => {
 
           {/* Link Generator - only show when a specific folder is selected */}
           {selectedFolderId && (
-            <div className="bg-card/90 backdrop-blur-sm rounded-xl border border-border/50 p-6 shadow-soft">
-              <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider mb-4">
+            <div className="bg-card/90 backdrop-blur-sm rounded-xl border border-border/50 p-4 sm:p-6 shadow-soft">
+              <h2 className="font-semibold text-sm text-foreground/70 uppercase tracking-wider mb-4">
                 Generate Entry Link <span className="text-primary">({selectedFolderName})</span>
               </h2>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button onClick={generateLink} disabled={generating} className="font-medium">
+              <div className="flex flex-col gap-3">
+                <Button onClick={generateLink} disabled={generating} className="font-medium w-full sm:w-auto">
                   <Link2 className="w-4 h-4 mr-2" />
                   {generating ? "Generating..." : "Generate New Entry Link"}
                 </Button>
                 {generatedLink && (
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0">
                     <code className="text-xs bg-muted px-3 py-2 rounded-lg border border-border truncate flex-1 font-mono">
                       {generatedLink}
                     </code>
-                    <Button variant="outline" size="icon" onClick={copyLink}>
+                    <Button variant="outline" size="icon" onClick={copyLink} className="shrink-0">
                       {copied ? <Check className="w-4 h-4 text-success" /> : <Copy className="w-4 h-4" />}
                     </Button>
                   </div>
@@ -293,20 +289,22 @@ const Dashboard = () => {
 
           {/* Records Table */}
           <div className="bg-card/90 backdrop-blur-sm rounded-xl border border-border/50 overflow-hidden shadow-soft">
-            <div className="px-6 py-4 border-b border-border/50 flex items-center justify-between">
-              <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+            <div className="px-4 sm:px-6 py-4 border-b border-border/50 flex items-center justify-between">
+              <h2 className="font-semibold text-sm text-foreground/70 uppercase tracking-wider flex items-center gap-2">
                 <Users className="w-4 h-4" /> Labour Records
               </h2>
               {filteredRecords.length > 0 && (
                 <Button variant="outline" size="sm" onClick={exportCSV} className="font-medium">
-                  <Download className="w-4 h-4 mr-2" /> Export CSV
+                  <Download className="w-4 h-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Export CSV</span>
+                  <span className="sm:hidden">CSV</span>
                 </Button>
               )}
             </div>
             {loading ? (
-              <div className="p-8 text-center text-muted-foreground text-sm">Loading records...</div>
+              <div className="p-8 text-center text-foreground/60 text-sm">Loading records...</div>
             ) : filteredRecords.length === 0 ? (
-              <div className="p-12 text-center text-muted-foreground text-sm">
+              <div className="p-8 sm:p-12 text-center text-foreground/60 text-sm">
                 No entries yet. Generate a link and share it with your mate.
               </div>
             ) : (
@@ -315,19 +313,19 @@ const Dashboard = () => {
                   <TableHeader>
                     <TableRow className="border-border/50 hover:bg-transparent">
                       <TableHead className="text-xs font-medium uppercase tracking-wider">Date</TableHead>
-                      <TableHead className="text-xs font-medium uppercase tracking-wider">Day</TableHead>
+                      <TableHead className="text-xs font-medium uppercase tracking-wider hidden sm:table-cell">Day</TableHead>
                       <TableHead className="text-xs font-medium uppercase tracking-wider text-right">Labour</TableHead>
                       <TableHead className="text-xs font-medium uppercase tracking-wider text-right">Cumulative</TableHead>
-                      <TableHead className="text-xs font-medium uppercase tracking-wider text-right">Submitted</TableHead>
+                      <TableHead className="text-xs font-medium uppercase tracking-wider text-right hidden sm:table-cell">Submitted</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredRecords.map((record) => (
                       <TableRow key={record.id} className="border-border/50">
-                        <TableCell className="font-mono font-medium">
+                        <TableCell className="font-mono font-medium text-sm">
                           {format(new Date(record.date), "dd MMM yyyy")}
                         </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
+                        <TableCell className="text-foreground/70 text-sm hidden sm:table-cell">
                           {format(new Date(record.date), "EEEE")}
                         </TableCell>
                         <TableCell className="text-right font-mono font-bold text-primary text-lg">
@@ -336,7 +334,7 @@ const Dashboard = () => {
                         <TableCell className="text-right font-mono font-semibold text-foreground">
                           {cumulativeTotals.get(record.id) ?? "—"}
                         </TableCell>
-                        <TableCell className="text-right text-muted-foreground text-sm">
+                        <TableCell className="text-right text-foreground/70 text-sm hidden sm:table-cell">
                           {format(new Date(record.submitted_at), "HH:mm")}
                         </TableCell>
                       </TableRow>

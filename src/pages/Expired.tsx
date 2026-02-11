@@ -8,7 +8,7 @@ const Expired = () => {
           <HardHat className="w-7 h-7 text-destructive" />
         </div>
         <h1 className="text-2xl font-bold mb-2">Link Expired</h1>
-        <p className="text-muted-foreground text-sm">
+        <p className="text-foreground/70 text-sm">
           This entry link is no longer active. Contact the site owner for a new link.
         </p>
       </div>

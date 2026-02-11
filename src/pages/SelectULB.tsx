@@ -32,23 +32,23 @@ const SelectULB = () => {
           <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center mx-auto">
             <HardHat className="w-7 h-7 text-primary-foreground" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground">NatureSection</h1>
-          <p className="text-muted-foreground">Select your ULB workspace to continue</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">NatureSection</h1>
+          <p className="text-foreground/80 text-sm">Select your ULB workspace to continue</p>
         </div>
 
         {/* Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
           {ULB_OPTIONS.map((ulb) => (
             <button
               key={ulb.id}
               onClick={() => handleSelect(ulb.id)}
-              className="group bg-card/90 backdrop-blur-sm border border-border/50 rounded-2xl p-8 shadow-soft hover:border-primary/50 hover:shadow-lg transition-all duration-200 text-left"
+              className="group bg-card/90 backdrop-blur-sm border border-border/50 rounded-2xl p-6 sm:p-8 shadow-soft hover:border-primary/50 hover:shadow-lg transition-all duration-200 text-left"
             >
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary/20 transition-colors">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 sm:mb-5 group-hover:bg-primary/20 transition-colors">
                 <MapPin className="w-6 h-6 text-primary" />
               </div>
-              <h2 className="text-xl font-bold text-foreground mb-1">{ulb.label}</h2>
-              <p className="text-sm text-muted-foreground">Open {ulb.label} workspace</p>
+              <h2 className="text-lg sm:text-xl font-bold text-foreground mb-1">{ulb.label}</h2>
+              <p className="text-sm text-foreground/70">Open {ulb.label} workspace</p>
             </button>
           ))}
         </div>

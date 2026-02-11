@@ -1,28 +1,52 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { HardHat, Lock } from "lucide-react";
+import { HardHat, Lock, UserPlus } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsLoggedIn(!!session);
+      if (session) navigate("/select-ulb");
+    };
+    checkSession();
+  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      navigate("/select-ulb");
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: window.location.origin },
+        });
+        if (error) throw error;
+        toast({
+          title: "Check your email",
+          description: "A confirmation link has been sent to your email address.",
+        });
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        navigate("/select-ulb");
+      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -35,7 +59,7 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-t from-[hsl(220,60%,20%)] via-[hsl(220,50%,40%)] to-[hsl(220,30%,85%)] dark:from-[hsl(220,30%,8%)] dark:via-[hsl(220,25%,15%)] dark:to-[hsl(220,20%,25%)] relative">
+    <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 bg-gradient-to-t from-[hsl(220,60%,20%)] via-[hsl(220,50%,40%)] to-[hsl(220,30%,85%)] dark:from-[hsl(220,30%,8%)] dark:via-[hsl(220,25%,15%)] dark:to-[hsl(220,20%,25%)] relative">
       <div className="absolute top-4 right-4"><ThemeToggle /></div>
       <div className="w-full max-w-sm animate-fade-in">
         <div className="text-center mb-8">
@@ -43,7 +67,7 @@ const Auth = () => {
             <HardHat className="w-7 h-7 text-primary-foreground" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">NatureSection</h1>
-          <p className="text-muted-foreground text-sm mt-1">Labor Tracker</p>
+          <p className="text-foreground/80 text-sm mt-1">Labor Tracker</p>
         </div>
 
         <div className="bg-card/90 backdrop-blur-sm rounded-xl border border-border/50 p-6 shadow-card">
@@ -72,10 +96,22 @@ const Auth = () => {
               />
             </div>
             <Button type="submit" className="w-full font-medium" disabled={loading}>
-              <Lock className="w-4 h-4 mr-2" />
-              {loading ? "Please wait..." : "Sign In"}
+              {isSignUp ? <UserPlus className="w-4 h-4 mr-2" /> : <Lock className="w-4 h-4 mr-2" />}
+              {loading ? "Please wait..." : isSignUp ? "Sign Up" : "Sign In"}
             </Button>
           </form>
+
+          {!isLoggedIn && (
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-sm text-primary hover:underline font-medium"
+              >
+                {isSignUp ? "Already have an account? Sign In" : "Don't have an account? Sign Up"}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
