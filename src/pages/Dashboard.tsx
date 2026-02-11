@@ -15,6 +15,7 @@ import {
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis } from "recharts";
 import { HardHat, Link2, LogOut, Users, Copy, Check, Settings, Download } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 import { format, subDays, isAfter, startOfDay } from "date-fns";
 
 interface LaborRecord {
@@ -155,6 +156,7 @@ const Dashboard = () => {
             <h1 className="font-semibold text-lg tracking-tight">CivilSite</h1>
           </div>
           <div className="flex items-center gap-1">
+            <ThemeToggle />
             <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="text-muted-foreground hover:text-foreground">
               <Settings className="w-4 h-4" />
             </Button>
