@@ -243,28 +243,30 @@ const Dashboard = () => {
             )}
           </div>
 
-          {/* Link Generator */}
-          <div className="bg-card/90 backdrop-blur-sm rounded-xl border border-border/50 p-6 shadow-soft">
-            <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider mb-4">
-              Generate Entry Link {selectedFolderId && <span className="text-primary">({selectedFolderName})</span>}
-            </h2>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button onClick={generateLink} disabled={generating} className="font-medium">
-                <Link2 className="w-4 h-4 mr-2" />
-                {generating ? "Generating..." : "Generate New Entry Link"}
-              </Button>
-              {generatedLink && (
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <code className="text-xs bg-muted px-3 py-2 rounded-lg border border-border truncate flex-1 font-mono">
-                    {generatedLink}
-                  </code>
-                  <Button variant="outline" size="icon" onClick={copyLink}>
-                    {copied ? <Check className="w-4 h-4 text-success" /> : <Copy className="w-4 h-4" />}
-                  </Button>
-                </div>
-              )}
+          {/* Link Generator - only show when a specific folder is selected */}
+          {selectedFolderId && (
+            <div className="bg-card/90 backdrop-blur-sm rounded-xl border border-border/50 p-6 shadow-soft">
+              <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider mb-4">
+                Generate Entry Link <span className="text-primary">({selectedFolderName})</span>
+              </h2>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button onClick={generateLink} disabled={generating} className="font-medium">
+                  <Link2 className="w-4 h-4 mr-2" />
+                  {generating ? "Generating..." : "Generate New Entry Link"}
+                </Button>
+                {generatedLink && (
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <code className="text-xs bg-muted px-3 py-2 rounded-lg border border-border truncate flex-1 font-mono">
+                      {generatedLink}
+                    </code>
+                    <Button variant="outline" size="icon" onClick={copyLink}>
+                      {copied ? <Check className="w-4 h-4 text-success" /> : <Copy className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Records Table */}
           <div className="bg-card/90 backdrop-blur-sm rounded-xl border border-border/50 overflow-hidden shadow-soft">
