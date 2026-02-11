@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import SelectULB from "./pages/SelectULB";
 import Dashboard from "./pages/Dashboard";
 import SubmitEntry from "./pages/SubmitEntry";
 import Expired from "./pages/Expired";
@@ -24,6 +25,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/select-ulb" element={<SelectULB />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/submit/:tokenId" element={<SubmitEntry />} />
           <Route path="/expired" element={<Expired />} />

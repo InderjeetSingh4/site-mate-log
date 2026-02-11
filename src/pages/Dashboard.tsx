@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { mapDatabaseError } from "@/lib/errorHandler";
@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis } from "recharts";
-import { HardHat, Link2, LogOut, Users, Copy, Check, Settings, Download } from "lucide-react";
+import { HardHat, Link2, LogOut, Users, Copy, Check, Settings, Download, ArrowLeftRight } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import SiteFolderSidebar, { type SiteFolder } from "@/components/SiteFolderSidebar";
 import { format, subDays, isAfter, startOfDay } from "date-fns";
@@ -20,6 +20,7 @@ interface LaborRecord {
   labor_count: number;
   submitted_at: string;
   folder_id: string | null;
+  ulb: string;
 }
 
 const Dashboard = () => {
@@ -33,7 +34,13 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const selectedUlb = sessionStorage.getItem("selected_ulb");
+
   useEffect(() => {
+    if (!selectedUlb) {
+      navigate("/select-ulb");
+      return;
+    }
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/auth"); return; }
@@ -45,12 +52,13 @@ const Dashboard = () => {
     });
     init();
     return () => subscription.unsubscribe();
-  }, []);
+  }, [selectedUlb]);
 
   const fetchRecords = async () => {
     const { data, error } = await supabase
       .from("labor_records")
       .select("*")
+      .eq("ulb", selectedUlb!)
       .order("date", { ascending: false });
     if (error) {
       toast({ title: "Error fetching records", description: mapDatabaseError(error), variant: "destructive" });
@@ -64,6 +72,7 @@ const Dashboard = () => {
     const { data, error } = await supabase
       .from("site_folders")
       .select("*")
+      .eq("ulb", selectedUlb!)
       .order("created_at", { ascending: true });
     if (!error && data) setFolders(data);
   };
@@ -78,7 +87,7 @@ const Dashboard = () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { navigate("/auth"); return; }
 
-    const insertData: any = { created_by: session.user.id };
+    const insertData: any = { created_by: session.user.id, ulb: selectedUlb };
     if (selectedFolderId) insertData.folder_id = selectedFolderId;
 
     const { data, error } = await supabase
@@ -105,7 +114,13 @@ const Dashboard = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    sessionStorage.removeItem("selected_ulb");
     navigate("/auth");
+  };
+
+  const handleSwitchUlb = () => {
+    sessionStorage.removeItem("selected_ulb");
+    navigate("/select-ulb");
   };
 
   const exportCSV = () => {
@@ -148,7 +163,6 @@ const Dashboard = () => {
       .map((r) => ({ date: format(new Date(r.date), "dd MMM"), labor: r.labor_count }));
   }, [last7Days]);
 
-  // Cumulative totals for filtered records (sorted by date asc)
   const cumulativeTotals = useMemo(() => {
     const sorted = [...filteredRecords].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     const map = new Map<string, number>();
@@ -175,18 +189,26 @@ const Dashboard = () => {
               onSelectFolder={setSelectedFolderId}
               onFoldersChange={fetchFolders}
               mode="mobile"
+              onSwitchUlb={handleSwitchUlb}
             />
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <HardHat className="w-4 h-4 text-primary-foreground" />
             </div>
-            <h1 className="font-semibold text-lg tracking-tight text-white dark:text-foreground hidden sm:block">CivilSite</h1>
+            <h1 className="font-semibold text-lg tracking-tight text-foreground hidden sm:block">NatureSection</h1>
           </div>
           <div className="flex items-center gap-1">
+            <span className="hidden md:inline text-sm font-medium text-foreground bg-primary/10 px-3 py-1 rounded-full">
+              Workspace: {selectedUlb}
+            </span>
             <ThemeToggle />
-            <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="text-white/70 hover:text-white dark:text-muted-foreground dark:hover:text-foreground">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="text-foreground/70 hover:text-foreground">
               <Settings className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-white/70 hover:text-white dark:text-muted-foreground dark:hover:text-foreground">
+            <Button variant="ghost" size="sm" onClick={handleSwitchUlb} className="text-foreground/70 hover:text-foreground hidden sm:flex">
+              <ArrowLeftRight className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Switch ULB</span>
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-foreground/70 hover:text-foreground">
               <LogOut className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">Sign Out</span>
             </Button>
@@ -203,13 +225,14 @@ const Dashboard = () => {
             onSelectFolder={setSelectedFolderId}
             onFoldersChange={fetchFolders}
             mode="desktop"
+            onSwitchUlb={handleSwitchUlb}
           />
         </aside>
 
         <main className="flex-1 px-4 sm:px-6 py-8 space-y-6 animate-fade-in max-w-4xl">
           {/* Current folder label */}
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-white dark:text-foreground tracking-tight">{selectedFolderName}</h2>
+            <h2 className="text-xl font-bold text-foreground tracking-tight">{selectedFolderName}</h2>
           </div>
 
           {/* Stats */}

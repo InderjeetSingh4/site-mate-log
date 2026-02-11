@@ -22,7 +22,7 @@ const Auth = () => {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      navigate("/dashboard");
+      navigate("/select-ulb");
     } catch (error: any) {
       toast({
         title: "Error",
@@ -42,8 +42,8 @@ const Auth = () => {
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-primary mb-4 shadow-card">
             <HardHat className="w-7 h-7 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white dark:text-foreground">CivilSite</h1>
-          <p className="text-white/60 dark:text-muted-foreground text-sm mt-1">Labor Tracker</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">NatureSection</h1>
+          <p className="text-muted-foreground text-sm mt-1">Labor Tracker</p>
         </div>
 
         <div className="bg-card/90 backdrop-blur-sm rounded-xl border border-border/50 p-6 shadow-card">
