@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { HardHat } from "lucide-react";
+import { HardHat, Check } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { motion } from "framer-motion";
 
 const ULB_OPTIONS = [
   { id: "KishangarhBas", label: "KishangarhBas" },
@@ -30,38 +31,46 @@ const SelectULB = () => {
   const handleSelect = (ulb: string) => {
     setSelected(ulb);
     sessionStorage.setItem("selected_ulb", ulb);
-    navigate("/dashboard");
+    setTimeout(() => navigate("/dashboard"), 150);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-t from-[hsl(220,60%,20%)] via-[hsl(220,50%,40%)] to-[hsl(220,30%,85%)] dark:from-[hsl(220,30%,8%)] dark:via-[hsl(220,25%,15%)] dark:to-[hsl(220,20%,25%)] flex items-center justify-center p-4">
-      <div className="w-full max-w-sm space-y-6 animate-fade-in">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className="w-full max-w-sm space-y-6"
+      >
         <div className="text-center space-y-2">
-          <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center mx-auto">
-            <HardHat className="w-7 h-7 text-primary-foreground" />
+          <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center mx-auto shadow-apple">
+            <HardHat className="w-7 h-7 text-primary-foreground" strokeWidth={1.5} />
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">NatureSection</h1>
-          <p className="text-foreground/80 text-sm">Select your project site</p>
+          <p className="text-muted-foreground text-sm">Select your project site</p>
         </div>
 
-        <div className="bg-card/90 backdrop-blur-sm rounded-xl border border-border/50 p-6 shadow-soft">
-          <label className="text-xs font-medium uppercase tracking-wider text-foreground/70 mb-3 block">
-            Select Project Site
+        <div className="glass rounded-3xl p-6 shadow-apple">
+          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 block">
+            Project Site
           </label>
           <Select value={selected} onValueChange={handleSelect}>
-            <SelectTrigger className="w-full h-12 text-base font-semibold bg-background">
+            <SelectTrigger className="w-full h-12 text-base font-semibold rounded-xl bg-input border-0 focus:ring-2 focus:ring-primary shadow-soft">
               <SelectValue placeholder="Choose a workspace…" />
             </SelectTrigger>
-            <SelectContent className="bg-popover z-50">
+            <SelectContent className="bg-popover z-50 rounded-2xl shadow-apple border-border/30 p-1">
               {ULB_OPTIONS.map((ulb) => (
-                <SelectItem key={ulb.id} value={ulb.id} className="text-base font-medium py-3">
-                  {ulb.label}
+                <SelectItem key={ulb.id} value={ulb.id} className="text-base font-medium py-3 rounded-xl cursor-pointer">
+                  <span className="flex items-center gap-2">
+                    {selected === ulb.id && <Check className="w-4 h-4 text-primary" strokeWidth={2} />}
+                    {ulb.label}
+                  </span>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };
