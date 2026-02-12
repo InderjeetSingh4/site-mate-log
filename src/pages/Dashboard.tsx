@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { mapDatabaseError } from "@/lib/errorHandler";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis } from "recharts";
-import { HardHat, Link2, LogOut, Users, Copy, Check, Settings, Download, ArrowLeftRight } from "lucide-react";
+import { HardHat, Link2, LogOut, Users, Copy, Check, Settings, Download, ArrowLeftRight, History } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import SiteFolderSidebar, { type SiteFolder } from "@/components/SiteFolderSidebar";
 import { format, subDays, isAfter, startOfDay } from "date-fns";
@@ -21,7 +22,17 @@ interface LaborRecord {
   submitted_at: string;
   folder_id: string | null;
   ulb: string;
+  l: number | null;
+  w: number | null;
+  d: number | null;
+  quantity: number | null;
 }
+
+const BATCH_SIZE = 15;
+
+const calcQuantity = (labor: number, l: number | null, w: number | null, d: number | null) => {
+  return labor * (l || 1) * (w || 1) * (d || 1);
+};
 
 const Dashboard = () => {
   const [records, setRecords] = useState<LaborRecord[]>([]);
@@ -31,6 +42,9 @@ const Dashboard = () => {
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [editingCell, setEditingCell] = useState<{ id: string; field: "l" | "w" | "d" } | null>(null);
+  const [editValue, setEditValue] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -59,7 +73,7 @@ const Dashboard = () => {
       .from("labor_records")
       .select("*")
       .eq("ulb", selectedUlb!)
-      .order("date", { ascending: false });
+      .order("date", { ascending: true });
     if (error) {
       toast({ title: "Error fetching records", description: mapDatabaseError(error), variant: "destructive" });
     } else {
@@ -81,6 +95,24 @@ const Dashboard = () => {
     if (!selectedFolderId) return records;
     return records.filter((r) => r.folder_id === selectedFolderId);
   }, [records, selectedFolderId]);
+
+  // Split into current batch (last 15) and history
+  const currentBatch = useMemo(() => {
+    if (showHistory) return [];
+    return filteredRecords.slice(-BATCH_SIZE);
+  }, [filteredRecords, showHistory]);
+
+  const historyBatch = useMemo(() => {
+    if (!showHistory) return [];
+    const cutoff = filteredRecords.length - BATCH_SIZE;
+    return cutoff > 0 ? filteredRecords.slice(0, cutoff) : [];
+  }, [filteredRecords, showHistory]);
+
+  const displayRecords = showHistory ? historyBatch : currentBatch;
+
+  const totalLabor = useMemo(() => {
+    return filteredRecords.reduce((s, r) => s + r.labor_count, 0);
+  }, [filteredRecords]);
 
   const generateLink = async () => {
     setGenerating(true);
@@ -123,20 +155,47 @@ const Dashboard = () => {
     navigate("/select-ulb");
   };
 
+  const handleDimensionEdit = async (recordId: string, field: "l" | "w" | "d", value: string) => {
+    const numVal = value === "" ? null : parseFloat(value);
+    if (value !== "" && (isNaN(numVal!) || numVal! < 0)) return;
+
+    const record = records.find((r) => r.id === recordId);
+    if (!record) return;
+
+    const updatedL = field === "l" ? numVal : record.l;
+    const updatedW = field === "w" ? numVal : record.w;
+    const updatedD = field === "d" ? numVal : record.d;
+    const quantity = calcQuantity(record.labor_count, updatedL, updatedW, updatedD);
+
+    const { error } = await supabase
+      .from("labor_records")
+      .update({ [field]: numVal, quantity })
+      .eq("id", recordId);
+
+    if (error) {
+      toast({ title: "Error", description: mapDatabaseError(error), variant: "destructive" });
+    } else {
+      setRecords((prev) =>
+        prev.map((r) =>
+          r.id === recordId ? { ...r, [field]: numVal, quantity } : r
+        )
+      );
+    }
+    setEditingCell(null);
+  };
+
+  const startEdit = (id: string, field: "l" | "w" | "d", currentVal: number | null) => {
+    setEditingCell({ id, field });
+    setEditValue(currentVal != null ? String(currentVal) : "");
+  };
+
   const exportCSV = () => {
     if (filteredRecords.length === 0) return;
-    const sorted = [...filteredRecords].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    const header = "Date,Day,Labour Count,Cumulative Total";
-    let cumulative = 0;
-    const chronological = [...sorted].reverse();
-    const cumulativeMap = new Map<string, number>();
-    chronological.forEach((r) => {
-      cumulative += r.labor_count;
-      cumulativeMap.set(r.id, cumulative);
-    });
-    const rows = sorted.map((r) => {
+    const header = "Date,Day,Labour Count,L,W,D,Quantity";
+    const rows = filteredRecords.map((r) => {
       const d = new Date(r.date);
-      return `${format(d, "dd/MM/yyyy")},${format(d, "EEEE")},${r.labor_count},${cumulativeMap.get(r.id)}`;
+      const qty = calcQuantity(r.labor_count, r.l, r.w, r.d);
+      return `${format(d, "dd/MM/yyyy")},${format(d, "EEEE")},${r.labor_count},${r.l ?? ""},${r.w ?? ""},${r.d ?? ""},${qty}`;
     });
     const csv = [header, ...rows].join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -163,19 +222,13 @@ const Dashboard = () => {
       .map((r) => ({ date: format(new Date(r.date), "dd MMM"), labor: r.labor_count }));
   }, [last7Days]);
 
-  const cumulativeTotals = useMemo(() => {
-    const sorted = [...filteredRecords].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    const map = new Map<string, number>();
-    let total = 0;
-    sorted.forEach((r) => { total += r.labor_count; map.set(r.id, total); });
-    return map;
-  }, [filteredRecords]);
-
   const chartConfig = { labor: { label: "Labor Count", color: "hsl(var(--primary))" } };
 
   const selectedFolderName = selectedFolderId
     ? folders.find((f) => f.id === selectedFolderId)?.name
     : "All Sites";
+
+  const hasHistory = filteredRecords.length > BATCH_SIZE;
 
   return (
     <div className="min-h-screen bg-gradient-to-t from-[hsl(220,60%,20%)] via-[hsl(220,50%,40%)] to-[hsl(220,30%,85%)] dark:from-[hsl(220,30%,8%)] dark:via-[hsl(220,25%,15%)] dark:to-[hsl(220,20%,25%)]">
@@ -197,11 +250,11 @@ const Dashboard = () => {
             <h1 className="font-semibold text-base sm:text-lg tracking-tight text-foreground hidden sm:block">NatureSection</h1>
           </div>
           <div className="flex items-center gap-0.5 sm:gap-1">
-            <span className="hidden md:inline text-sm font-medium text-foreground bg-primary/10 px-3 py-1 rounded-full">
+            <span className="hidden lg:inline text-sm font-medium text-foreground bg-primary/10 px-3 py-1 rounded-full">
               Workspace: {selectedUlb}
             </span>
-            <Button variant="outline" size="sm" onClick={handleSwitchUlb} className="hidden md:inline-flex lg:hidden text-foreground">
-              <ArrowLeftRight className="w-4 h-4 mr-1" /> Switch ULB
+            <Button variant="outline" size="sm" onClick={handleSwitchUlb} className="inline-flex lg:hidden text-foreground">
+              <ArrowLeftRight className="w-4 h-4 mr-1" /> <span className="hidden sm:inline">Switch ULB</span>
             </Button>
             <ThemeToggle />
             <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="text-foreground hover:text-foreground/80">
@@ -235,7 +288,7 @@ const Dashboard = () => {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+          <div className="grid grid-cols-3 gap-3 sm:gap-4">
             <div className="bg-card/90 backdrop-blur-sm rounded-xl border border-border/50 p-4 sm:p-5 shadow-soft">
               <p className="text-xs text-foreground/70 font-medium uppercase tracking-wider">Total Entries</p>
               <p className="text-2xl sm:text-3xl font-bold mt-2 tracking-tight">{filteredRecords.length}</p>
@@ -243,6 +296,10 @@ const Dashboard = () => {
             <div className="bg-card/90 backdrop-blur-sm rounded-xl border border-border/50 p-4 sm:p-5 shadow-soft">
               <p className="text-xs text-foreground/70 font-medium uppercase tracking-wider">Avg Labour (7d)</p>
               <p className="text-2xl sm:text-3xl font-bold text-primary mt-2 tracking-tight">{weeklyAvg}</p>
+            </div>
+            <div className="bg-card/90 backdrop-blur-sm rounded-xl border border-border/50 p-4 sm:p-5 shadow-soft">
+              <p className="text-xs text-foreground/70 font-medium uppercase tracking-wider">Total Labour</p>
+              <p className="text-2xl sm:text-3xl font-bold text-primary mt-2 tracking-tight">{totalLabor}</p>
             </div>
           </div>
 
@@ -292,23 +349,31 @@ const Dashboard = () => {
 
           {/* Records Table */}
           <div className="bg-card/90 backdrop-blur-sm rounded-xl border border-border/50 overflow-hidden shadow-soft">
-            <div className="px-4 sm:px-6 py-4 border-b border-border/50 flex items-center justify-between">
+            <div className="px-4 sm:px-6 py-4 border-b border-border/50 flex items-center justify-between gap-2">
               <h2 className="font-semibold text-sm text-foreground/70 uppercase tracking-wider flex items-center gap-2">
-                <Users className="w-4 h-4" /> Labour Records
+                <Users className="w-4 h-4" /> {showHistory ? "Past Records" : "Labour Records"}
               </h2>
-              {filteredRecords.length > 0 && (
-                <Button variant="outline" size="sm" onClick={exportCSV} className="font-medium">
-                  <Download className="w-4 h-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">Export CSV</span>
-                  <span className="sm:hidden">CSV</span>
-                </Button>
-              )}
+              <div className="flex items-center gap-2">
+                {hasHistory && (
+                  <Button variant={showHistory ? "default" : "outline"} size="sm" onClick={() => setShowHistory(!showHistory)} className="font-medium">
+                    <History className="w-4 h-4 mr-1" />
+                    <span className="hidden sm:inline">{showHistory ? "Current" : "History"}</span>
+                  </Button>
+                )}
+                {filteredRecords.length > 0 && (
+                  <Button variant="outline" size="sm" onClick={exportCSV} className="font-medium">
+                    <Download className="w-4 h-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">Export CSV</span>
+                    <span className="sm:hidden">CSV</span>
+                  </Button>
+                )}
+              </div>
             </div>
             {loading ? (
               <div className="p-8 text-center text-foreground/60 text-sm">Loading records...</div>
-            ) : filteredRecords.length === 0 ? (
+            ) : displayRecords.length === 0 ? (
               <div className="p-8 sm:p-12 text-center text-foreground/60 text-sm">
-                No entries yet. Generate a link and share it with your mate.
+                {showHistory ? "No past records." : "No entries yet. Generate a link and share it with your mate."}
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -318,12 +383,14 @@ const Dashboard = () => {
                       <TableHead className="text-xs font-medium uppercase tracking-wider">Date</TableHead>
                       <TableHead className="text-xs font-medium uppercase tracking-wider hidden sm:table-cell">Day</TableHead>
                       <TableHead className="text-xs font-medium uppercase tracking-wider text-right">Labour</TableHead>
-                      <TableHead className="text-xs font-medium uppercase tracking-wider text-right">Cumulative</TableHead>
-                      <TableHead className="text-xs font-medium uppercase tracking-wider text-right hidden sm:table-cell">Submitted</TableHead>
+                      <TableHead className="text-xs font-medium uppercase tracking-wider text-right">L</TableHead>
+                      <TableHead className="text-xs font-medium uppercase tracking-wider text-right">W</TableHead>
+                      <TableHead className="text-xs font-medium uppercase tracking-wider text-right">D</TableHead>
+                      <TableHead className="text-xs font-medium uppercase tracking-wider text-right">Qty</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredRecords.map((record) => (
+                    {displayRecords.map((record) => (
                       <TableRow key={record.id} className="border-border/50">
                         <TableCell className="font-mono font-medium text-sm">
                           {format(new Date(record.date), "dd MMM yyyy")}
@@ -334,11 +401,34 @@ const Dashboard = () => {
                         <TableCell className="text-right font-mono font-bold text-primary text-lg">
                           {record.labor_count}
                         </TableCell>
+                        {(["l", "w", "d"] as const).map((field) => (
+                          <TableCell key={field} className="text-right p-1 sm:p-2">
+                            {editingCell?.id === record.id && editingCell.field === field ? (
+                              <Input
+                                type="number"
+                                min="0"
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                onBlur={() => handleDimensionEdit(record.id, field, editValue)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") handleDimensionEdit(record.id, field, editValue);
+                                  if (e.key === "Escape") setEditingCell(null);
+                                }}
+                                autoFocus
+                                className="w-14 sm:w-16 h-8 text-center text-sm font-mono"
+                              />
+                            ) : (
+                              <button
+                                onClick={() => startEdit(record.id, field, record[field])}
+                                className="w-14 sm:w-16 h-8 text-center text-sm font-mono rounded border border-transparent hover:border-border hover:bg-muted/50 transition-colors inline-flex items-center justify-center"
+                              >
+                                {record[field] != null ? record[field] : "—"}
+                              </button>
+                            )}
+                          </TableCell>
+                        ))}
                         <TableCell className="text-right font-mono font-semibold text-foreground">
-                          {cumulativeTotals.get(record.id) ?? "—"}
-                        </TableCell>
-                        <TableCell className="text-right text-foreground/70 text-sm hidden sm:table-cell">
-                          {format(new Date(record.submitted_at), "HH:mm")}
+                          {calcQuantity(record.labor_count, record.l, record.w, record.d).toLocaleString()}
                         </TableCell>
                       </TableRow>
                     ))}

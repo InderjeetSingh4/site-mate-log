@@ -69,31 +69,43 @@ export type Database = {
       }
       labor_records: {
         Row: {
+          d: number | null
           date: string
           folder_id: string | null
           id: string
+          l: number | null
           labor_count: number
+          quantity: number | null
           submitted_at: string
           ulb: string
           user_id: string | null
+          w: number | null
         }
         Insert: {
+          d?: number | null
           date: string
           folder_id?: string | null
           id?: string
+          l?: number | null
           labor_count: number
+          quantity?: number | null
           submitted_at?: string
           ulb?: string
           user_id?: string | null
+          w?: number | null
         }
         Update: {
+          d?: number | null
           date?: string
           folder_id?: string | null
           id?: string
+          l?: number | null
           labor_count?: number
+          quantity?: number | null
           submitted_at?: string
           ulb?: string
           user_id?: string | null
+          w?: number | null
         }
         Relationships: [
           {
