@@ -101,7 +101,7 @@
 
   body {
     @apply text-foreground antialiased;
-    background: linear-gradient(to top, #60a5fa, #93c5fd, #dbeafe, #eff6ff);
+    background: linear-gradient(to top, #60a5fa, #93c5fd, #bfdbfe, #dbeafe);
     background-attachment: fixed;
     min-height: 100vh;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif;
