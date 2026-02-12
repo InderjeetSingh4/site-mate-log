@@ -78,7 +78,7 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 bg-gradient-to-t from-[hsl(220,60%,20%)] via-[hsl(220,50%,40%)] to-[hsl(220,30%,85%)] dark:from-[hsl(220,30%,8%)] dark:via-[hsl(220,25%,15%)] dark:to-[hsl(220,20%,25%)] relative">
+    <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 relative">
       <div className="absolute top-4 right-4"><ThemeToggle /></div>
       <div className="w-full max-w-sm animate-fade-in">
         <div className="text-center mb-8">
@@ -125,7 +125,7 @@ const Auth = () => {
               <button
                 type="button"
                 onClick={() => setIsSignUp(!isSignUp)}
-                className="text-sm text-primary hover:underline font-medium"
+                className="text-sm text-foreground hover:underline font-medium"
               >
                 {isSignUp ? "Already have an account? Sign In" : "Don't have an account? Sign Up"}
               </button>
