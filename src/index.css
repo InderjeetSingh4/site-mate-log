@@ -4,43 +4,43 @@
 
 @layer base {
   :root {
-    --background: 222 47% 5%;
-    --foreground: 0 0% 100%;
+    --background: 210 40% 96%;
+    --foreground: 222 47% 11%;
 
-    --card: 0 0% 100% / 0.9;
-    --card-foreground: 222 20% 15%;
+    --card: 0 0% 100% / 0.85;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100% / 0.95;
-    --popover-foreground: 222 20% 15%;
+    --popover-foreground: 222 47% 11%;
 
     --primary: 211 100% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 215 20% 20%;
-    --secondary-foreground: 210 10% 85%;
+    --secondary: 214 32% 91%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 215 20% 18%;
-    --muted-foreground: 215 15% 60%;
+    --muted: 210 40% 92%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 215 20% 22%;
-    --accent-foreground: 0 0% 95%;
+    --accent: 210 40% 90%;
+    --accent-foreground: 222 47% 11%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 20% 20%;
-    --input: 0 0% 100% / 0.1;
+    --border: 214 32% 85%;
+    --input: 214 32% 91%;
     --ring: 211 100% 50%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 222 30% 8%;
-    --sidebar-foreground: 0 0% 92%;
+    --sidebar-background: 0 0% 100% / 0.6;
+    --sidebar-foreground: 222 47% 11%;
     --sidebar-primary: 211 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 20% 16%;
-    --sidebar-accent-foreground: 0 0% 92%;
-    --sidebar-border: 215 20% 18%;
+    --sidebar-accent: 214 32% 91%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 32% 85%;
     --sidebar-ring: 211 100% 50%;
 
     --success: 152 60% 40%;
@@ -101,7 +101,7 @@
 
   body {
     @apply text-foreground antialiased;
-    background: linear-gradient(to top, #020617, #1e293b, #334155);
+    background: linear-gradient(to top, #bfdbfe, #e0f2fe, #f0f9ff);
     background-attachment: fixed;
     min-height: 100vh;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif;
@@ -117,11 +117,11 @@
 
 @layer utilities {
   .glass {
-    @apply bg-white/90 backdrop-blur-xl border border-white/30 shadow-apple;
+    @apply bg-white/70 backdrop-blur-xl border border-white/40 shadow-apple;
   }
 
   .glass-strong {
-    @apply bg-white/85 backdrop-blur-2xl border border-white/40 shadow-apple;
+    @apply bg-white/50 backdrop-blur-2xl border border-white/30;
   }
 
   .dark .glass {
