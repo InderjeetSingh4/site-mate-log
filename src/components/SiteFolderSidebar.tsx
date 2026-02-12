@@ -82,7 +82,7 @@ const FolderList = ({
           whileTap={{ scale: 0.98 }}
           onClick={() => { onSelectFolder(null); onClose?.(); }}
           className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-            selectedFolderId === null ? "bg-primary text-primary-foreground shadow-soft" : "text-muted-foreground hover:bg-accent hover:text-foreground"
+            selectedFolderId === null ? "bg-primary text-primary-foreground shadow-soft" : "text-foreground/70 hover:bg-accent hover:text-foreground"
           }`}
         >
           <Folder className="w-4 h-4" strokeWidth={1.5} /> All Sites
@@ -94,7 +94,7 @@ const FolderList = ({
               whileTap={{ scale: 0.98 }}
               onClick={() => { onSelectFolder(folder.id); onClose?.(); }}
               className={`flex-1 flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                selectedFolderId === folder.id ? "bg-primary text-primary-foreground shadow-soft" : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                selectedFolderId === folder.id ? "bg-primary text-primary-foreground shadow-soft" : "text-foreground/70 hover:bg-accent hover:text-foreground"
               }`}
             >
               <Folder className="w-4 h-4 shrink-0" strokeWidth={1.5} />
@@ -123,7 +123,7 @@ const SiteFolderSidebar = ({ folders, selectedFolderId, onSelectFolder, onFolder
   if (mode === "desktop") {
     return (
       <div>
-        <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">Site Folders</h2>
+        <h2 className="text-xs font-bold uppercase tracking-wider text-foreground/50 mb-4">Site Folders</h2>
         <FolderList folders={folders} selectedFolderId={selectedFolderId} onSelectFolder={onSelectFolder} onFoldersChange={onFoldersChange} />
         {onSwitchUlb && (
           <motion.div whileTap={{ scale: 0.98 }}>
@@ -145,7 +145,7 @@ const SiteFolderSidebar = ({ folders, selectedFolderId, onSelectFolder, onFolder
       </SheetTrigger>
       <SheetContent side="left" className="w-72 p-5 glass-strong">
         <SheetHeader className="mb-4">
-          <SheetTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Site Folders</SheetTitle>
+          <SheetTitle className="text-xs font-bold uppercase tracking-wider text-foreground/50">Site Folders</SheetTitle>
         </SheetHeader>
         <FolderList folders={folders} selectedFolderId={selectedFolderId} onSelectFolder={onSelectFolder} onFoldersChange={onFoldersChange} onClose={() => setOpen(false)} />
         {onSwitchUlb && (

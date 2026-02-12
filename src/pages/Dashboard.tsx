@@ -210,7 +210,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen">
       {/* Header — frosted glass */}
-      <header className="border-b border-border/40 glass-strong sticky top-0 z-20">
+      <header className="border-b border-border/20 bg-white/30 backdrop-blur-xl sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3">
             <SiteFolderSidebar folders={folders} selectedFolderId={selectedFolderId} onSelectFolder={setSelectedFolderId} onFoldersChange={fetchFolders} mode="mobile" onSwitchUlb={handleSwitchUlb} />
@@ -245,7 +245,7 @@ const Dashboard = () => {
 
       <div className="flex max-w-7xl mx-auto min-h-[calc(100vh-57px)]">
         {/* Desktop sidebar — glass */}
-        <aside className="hidden lg:block w-64 shrink-0 border-r border-border/30 glass p-5">
+        <aside className="hidden lg:block w-64 shrink-0 border-r border-border/20 bg-white/30 backdrop-blur-xl p-5">
           <SiteFolderSidebar folders={folders} selectedFolderId={selectedFolderId} onSelectFolder={setSelectedFolderId} onFoldersChange={fetchFolders} mode="desktop" onSwitchUlb={handleSwitchUlb} />
         </aside>
 
