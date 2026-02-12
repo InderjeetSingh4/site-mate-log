@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { mapDatabaseError } from "@/lib/errorHandler";
@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis } from "recharts";
-import { HardHat, Link2, LogOut, Users, Copy, Check, Settings, Download, ArrowLeftRight, History, Pencil, X } from "lucide-react";
+import { HardHat, Link2, LogOut, Users, Copy, Check, Settings, Download, ArrowLeftRight, History } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import SiteFolderSidebar, { type SiteFolder } from "@/components/SiteFolderSidebar";
 import { format, subDays, isAfter, startOfDay } from "date-fns";
@@ -27,6 +27,7 @@ interface LaborRecord {
   submitted_at: string;
   folder_id: string | null;
   ulb: string;
+  user_id: string | null;
   l: number | null;
   w: number | null;
   d: number | null;
@@ -38,13 +39,7 @@ const BATCH_SIZE = 15;
 const calcQuantity = (labor: number, l: number | null, w: number | null, d: number | null) =>
   labor * (l || 1) * (w || 1) * (d || 1);
 
-interface EditState {
-  date: Date;
-  labor_count: string;
-  l: string;
-  w: string;
-  d: string;
-}
+type EditingCell = { recordId: string; field: "date" | "labor_count" | "l" | "w" | "d" } | null;
 
 const Dashboard = () => {
   const [records, setRecords] = useState<LaborRecord[]>([]);
@@ -55,8 +50,12 @@ const Dashboard = () => {
   const [copied, setCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  const [editingRowId, setEditingRowId] = useState<string | null>(null);
-  const [editState, setEditState] = useState<EditState | null>(null);
+  const [editingCell, setEditingCell] = useState<EditingCell>(null);
+  const [cellValue, setCellValue] = useState("");
+  const [editingDate, setEditingDate] = useState<Date | undefined>();
+  const [savingRowId, setSavingRowId] = useState<string | null>(null);
+  const [isOwner, setIsOwner] = useState(true); // Dashboard is owner-only
+  const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -150,49 +149,6 @@ const Dashboard = () => {
   const handleLogout = async () => { await supabase.auth.signOut(); sessionStorage.removeItem("selected_ulb"); navigate("/auth"); };
   const handleSwitchUlb = () => { sessionStorage.removeItem("selected_ulb"); navigate("/select-ulb"); };
 
-  const startEditRow = (record: LaborRecord) => {
-    setEditingRowId(record.id);
-    setEditState({
-      date: new Date(record.date),
-      labor_count: String(record.labor_count),
-      l: record.l != null ? String(record.l) : "",
-      w: record.w != null ? String(record.w) : "",
-      d: record.d != null ? String(record.d) : "",
-    });
-  };
-
-  const cancelEdit = () => { setEditingRowId(null); setEditState(null); };
-
-  const saveEditRow = async () => {
-    if (!editingRowId || !editState) return;
-    const laborCount = parseInt(editState.labor_count);
-    if (isNaN(laborCount) || laborCount < 0) {
-      toast({ title: "Invalid labour count", variant: "destructive" });
-      return;
-    }
-    const lVal = editState.l === "" ? null : parseFloat(editState.l);
-    const wVal = editState.w === "" ? null : parseFloat(editState.w);
-    const dVal = editState.d === "" ? null : parseFloat(editState.d);
-    const quantity = calcQuantity(laborCount, lVal, wVal, dVal);
-
-    const { error } = await supabase.from("labor_records").update({
-      date: format(editState.date, "yyyy-MM-dd"),
-      labor_count: laborCount,
-      l: lVal, w: wVal, d: dVal, quantity,
-    }).eq("id", editingRowId);
-
-    if (error) {
-      toast({ title: "Error saving", description: mapDatabaseError(error), variant: "destructive" });
-    } else {
-      setRecords((prev) => prev.map((r) => r.id === editingRowId
-        ? { ...r, date: format(editState.date, "yyyy-MM-dd"), labor_count: laborCount, l: lVal, w: wVal, d: dVal, quantity }
-        : r
-      ));
-      toast({ title: "Record updated" });
-    }
-    cancelEdit();
-  };
-
   const exportCSV = () => {
     if (filteredRecords.length === 0) return;
     const header = "Date,Day,Labour Count,L,W,D,Quantity";
@@ -207,9 +163,97 @@ const Dashboard = () => {
     a.click(); URL.revokeObjectURL(url);
   };
 
+  // --- Inline cell editing ---
+  const startCellEdit = (record: LaborRecord, field: EditingCell extends null ? never : NonNullable<EditingCell>["field"]) => {
+    if (!isOwner) return;
+    if (field === "date") {
+      setEditingDate(new Date(record.date));
+    } else {
+      const val = field === "labor_count" ? String(record.labor_count) : (record[field] != null ? String(record[field]) : "");
+      setCellValue(val);
+    }
+    setEditingCell({ recordId: record.id, field });
+    setTimeout(() => inputRef.current?.focus(), 30);
+  };
+
+  const saveCell = useCallback(async () => {
+    if (!editingCell) return;
+    const { recordId, field } = editingCell;
+    const record = records.find((r) => r.id === recordId);
+    if (!record) { setEditingCell(null); return; }
+
+    let updateData: any = {};
+    let newRecord = { ...record };
+
+    if (field === "date" && editingDate) {
+      const newDate = format(editingDate, "yyyy-MM-dd");
+      if (newDate === record.date) { setEditingCell(null); return; }
+      updateData.date = newDate;
+      newRecord.date = newDate;
+    } else if (field === "labor_count") {
+      const val = parseInt(cellValue);
+      if (isNaN(val) || val < 0) { setEditingCell(null); return; }
+      if (val === record.labor_count) { setEditingCell(null); return; }
+      updateData.labor_count = val;
+      newRecord.labor_count = val;
+      newRecord.quantity = calcQuantity(val, record.l, record.w, record.d);
+      updateData.quantity = newRecord.quantity;
+    } else if (field === "l" || field === "w" || field === "d") {
+      const val = cellValue === "" ? null : parseFloat(cellValue);
+      if (val === record[field]) { setEditingCell(null); return; }
+      updateData[field] = val;
+      newRecord[field] = val;
+      newRecord.quantity = calcQuantity(newRecord.labor_count, newRecord.l, newRecord.w, newRecord.d);
+      updateData.quantity = newRecord.quantity;
+    }
+
+    setEditingCell(null);
+    setSavingRowId(recordId);
+
+    const { error } = await supabase.from("labor_records").update(updateData).eq("id", recordId);
+    if (error) {
+      toast({ title: "Error saving", description: mapDatabaseError(error), variant: "destructive" });
+    } else {
+      setRecords((prev) => prev.map((r) => r.id === recordId ? newRecord : r));
+    }
+    setTimeout(() => setSavingRowId(null), 1000);
+  }, [editingCell, cellValue, editingDate, records, toast]);
+
+  const handleDateSelect = useCallback(async (date: Date | undefined) => {
+    if (!date || !editingCell) return;
+    setEditingDate(date);
+    // Save immediately on date pick
+    const record = records.find((r) => r.id === editingCell.recordId);
+    if (!record) { setEditingCell(null); return; }
+    const newDate = format(date, "yyyy-MM-dd");
+    if (newDate === record.date) { setEditingCell(null); return; }
+
+    setEditingCell(null);
+    setSavingRowId(editingCell.recordId);
+    const { error } = await supabase.from("labor_records").update({ date: newDate }).eq("id", editingCell.recordId);
+    if (error) {
+      toast({ title: "Error saving", description: mapDatabaseError(error), variant: "destructive" });
+    } else {
+      setRecords((prev) => prev.map((r) => r.id === editingCell.recordId ? { ...r, date: newDate } : r));
+    }
+    setTimeout(() => setSavingRowId(null), 1000);
+  }, [editingCell, records, toast]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") { e.preventDefault(); saveCell(); }
+    if (e.key === "Escape") setEditingCell(null);
+  };
+
+  const isEditingThis = (recordId: string, field: string) =>
+    editingCell?.recordId === recordId && editingCell?.field === field;
+
+  const editableCellClass = isOwner
+    ? "cursor-pointer hover:bg-accent/40 rounded-lg transition-colors"
+    : "";
+
   return (
     <div className="min-h-screen">
-      {/* Header — frosted glass */}
+      {/* Header */}
       <header className="border-b border-border/20 bg-white/30 backdrop-blur-xl sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3">
@@ -244,38 +288,30 @@ const Dashboard = () => {
       </header>
 
       <div className="flex max-w-7xl mx-auto min-h-[calc(100vh-57px)]">
-        {/* Desktop sidebar — glass */}
         <aside className="hidden lg:block w-64 shrink-0 border-r border-border/20 bg-white/30 backdrop-blur-xl p-5">
           <SiteFolderSidebar folders={folders} selectedFolderId={selectedFolderId} onSelectFolder={setSelectedFolderId} onFoldersChange={fetchFolders} mode="desktop" onSwitchUlb={handleSwitchUlb} />
         </aside>
 
         <main className="flex-1 px-4 sm:px-6 py-6 sm:py-8 space-y-5 sm:space-y-6 max-w-4xl w-full">
-          {/* Folder label */}
           <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2">
             <h2 className="text-xl sm:text-2xl font-bold text-foreground drop-shadow-sm">{selectedFolderName}</h2>
           </motion.div>
 
-          {/* Stats — iOS widget style */}
+          {/* Stats */}
           <div className="grid grid-cols-3 gap-3 sm:gap-4">
             {[
               { label: "Total Entries", value: filteredRecords.length, highlight: false },
               { label: "Avg Labour (7d)", value: weeklyAvg, highlight: true },
               { label: "Total Labour", value: totalLabor, highlight: true },
             ].map((s, i) => (
-              <motion.div
-                key={s.label}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="glass rounded-3xl p-4 sm:p-5 shadow-apple"
-              >
+              <motion.div key={s.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="glass rounded-3xl p-4 sm:p-5 shadow-apple">
                 <p className="text-[10px] sm:text-xs text-card-foreground/60 font-semibold uppercase tracking-wider">{s.label}</p>
                 <p className={cn("text-2xl sm:text-3xl font-bold mt-1.5 tracking-tight", s.highlight ? "text-primary" : "text-card-foreground")}>{s.value}</p>
               </motion.div>
             ))}
           </div>
 
-          {/* Chart — glass card */}
+          {/* Chart */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass rounded-3xl p-4 sm:p-6 shadow-apple">
             <h2 className="font-semibold text-xs text-card-foreground/60 uppercase tracking-wider mb-4 sm:mb-5">Site Strength (Last 7 Days)</h2>
             {chartData.length === 0 ? (
@@ -318,7 +354,7 @@ const Dashboard = () => {
             </motion.div>
           )}
 
-          {/* Records Table — Numbers-style */}
+          {/* Records Table */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-3xl overflow-hidden shadow-apple">
             <div className="px-4 sm:px-6 py-4 border-b border-border/30 flex items-center justify-between gap-2">
               <h2 className="font-semibold text-xs text-card-foreground/60 uppercase tracking-wider flex items-center gap-2">
@@ -359,95 +395,113 @@ const Dashboard = () => {
                       <TableHead className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-card-foreground/50 bg-transparent sticky top-0 text-right">W</TableHead>
                       <TableHead className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-card-foreground/50 bg-transparent sticky top-0 text-right">D</TableHead>
                       <TableHead className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-card-foreground/50 bg-transparent sticky top-0 text-right">Qty</TableHead>
-                      <TableHead className="w-14 bg-transparent sticky top-0"></TableHead>
+                      <TableHead className="w-8 bg-transparent sticky top-0"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     <AnimatePresence>
-                      {displayRecords.map((record) => {
-                        const isEditing = editingRowId === record.id;
-                        return (
-                          <motion.tr
-                            key={record.id}
-                            layout
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="border-b border-border/20 hover:bg-accent/30 transition-colors"
-                          >
-                            {/* Date */}
-                            <TableCell className="font-mono text-sm p-2.5">
-                              {isEditing && editState ? (
-                                <Popover>
-                                  <PopoverTrigger asChild>
-                                    <Button variant="secondary" size="sm" className="h-8 text-xs font-mono rounded-lg w-full justify-start bg-input">
-                                      <CalendarIcon className="w-3 h-3 mr-1.5" strokeWidth={1.5} />
-                                      {format(editState.date, "dd MMM")}
-                                    </Button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-auto p-0 bg-popover z-50 rounded-2xl shadow-apple" align="start">
-                                    <Calendar mode="single" selected={editState.date} onSelect={(d) => d && setEditState({ ...editState, date: d })} initialFocus />
-                                  </PopoverContent>
-                                </Popover>
-                              ) : (
-                                <span className="font-medium text-card-foreground">{format(new Date(record.date), "dd MMM yyyy")}</span>
-                              )}
-                            </TableCell>
-                            {/* Day */}
-                            <TableCell className="text-card-foreground/60 text-sm hidden sm:table-cell p-2.5">
-                              {isEditing && editState ? format(editState.date, "EEE") : format(new Date(record.date), "EEE")}
-                            </TableCell>
-                            {/* Labour */}
-                            <TableCell className="text-right p-2.5">
-                              {isEditing ? (
-                                <Input type="number" min="0" value={editState!.labor_count} onChange={(e) => setEditState({ ...editState!, labor_count: e.target.value })} className="h-8 w-16 sm:w-20 text-sm font-mono text-center ml-auto rounded-lg bg-input border-0 focus:ring-2 focus:ring-primary" />
-                              ) : (
-                                <span className="font-bold text-primary text-lg tabular-nums">{record.labor_count}</span>
-                              )}
-                            </TableCell>
-                            {/* L, W, D */}
-                            {(["l", "w", "d"] as const).map((field) => (
-                              <TableCell key={field} className="text-right p-1.5 sm:p-2.5">
-                                {isEditing ? (
-                                  <Input type="number" min="0" value={editState![field]} onChange={(e) => setEditState({ ...editState!, [field]: e.target.value })} className="h-8 w-14 sm:w-16 text-sm font-mono text-center ml-auto rounded-lg bg-input border-0 focus:ring-2 focus:ring-primary" />
-                                ) : (
-                                  <span className="font-mono text-sm tabular-nums text-card-foreground/60">{record[field] != null ? record[field] : "—"}</span>
-                                )}
-                              </TableCell>
-                            ))}
-                            {/* Qty */}
-                            <TableCell className="text-right font-mono font-semibold text-card-foreground p-2.5 tabular-nums">
-                              {isEditing && editState
-                                ? calcQuantity(parseInt(editState.labor_count) || 0, editState.l ? parseFloat(editState.l) : null, editState.w ? parseFloat(editState.w) : null, editState.d ? parseFloat(editState.d) : null).toLocaleString()
-                                : calcQuantity(record.labor_count, record.l, record.w, record.d).toLocaleString()
-                              }
-                            </TableCell>
-                            {/* Edit / Save */}
-                            <TableCell className="text-right p-2.5">
-                              {isEditing ? (
-                                <div className="flex items-center justify-end gap-0.5">
-                                  <motion.div whileTap={{ scale: 0.9 }}>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={saveEditRow}>
-                                      <Check className="w-4 h-4 text-primary" strokeWidth={2} />
-                                    </Button>
-                                  </motion.div>
-                                  <motion.div whileTap={{ scale: 0.9 }}>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={cancelEdit}>
-                                      <X className="w-4 h-4 text-muted-foreground" strokeWidth={2} />
-                                    </Button>
-                                  </motion.div>
-                                </div>
-                              ) : (
-                                <motion.div whileTap={{ scale: 0.9 }}>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => startEditRow(record)}>
-                                    <Pencil className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.5} />
+                      {displayRecords.map((record) => (
+                        <motion.tr
+                          key={record.id}
+                          layout
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="border-b border-border/20 hover:bg-accent/20 transition-colors"
+                        >
+                          {/* Date */}
+                          <TableCell className="p-1.5 sm:p-2.5">
+                            {isEditingThis(record.id, "date") ? (
+                              <Popover open onOpenChange={(open) => { if (!open) setEditingCell(null); }}>
+                                <PopoverTrigger asChild>
+                                  <Button variant="secondary" size="sm" className="h-8 text-xs font-mono rounded-lg w-full justify-start bg-input">
+                                    <CalendarIcon className="w-3 h-3 mr-1.5" strokeWidth={1.5} />
+                                    {editingDate ? format(editingDate, "dd MMM") : format(new Date(record.date), "dd MMM")}
                                   </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0 bg-popover z-50 rounded-2xl shadow-apple" align="start">
+                                  <Calendar mode="single" selected={editingDate} onSelect={handleDateSelect} initialFocus />
+                                </PopoverContent>
+                              </Popover>
+                            ) : (
+                              <span
+                                className={cn("font-medium text-sm text-card-foreground px-1.5 py-1 inline-block", editableCellClass)}
+                                onClick={() => startCellEdit(record, "date")}
+                              >
+                                {format(new Date(record.date), "dd MMM yyyy")}
+                              </span>
+                            )}
+                          </TableCell>
+                          {/* Day */}
+                          <TableCell className="text-card-foreground/60 text-sm hidden sm:table-cell p-2.5">
+                            {format(new Date(record.date), "EEE")}
+                          </TableCell>
+                          {/* Labour */}
+                          <TableCell className="text-right p-1.5 sm:p-2.5">
+                            {isEditingThis(record.id, "labor_count") ? (
+                              <Input
+                                ref={inputRef}
+                                type="number"
+                                min="0"
+                                value={cellValue}
+                                onChange={(e) => setCellValue(e.target.value)}
+                                onBlur={saveCell}
+                                onKeyDown={handleKeyDown}
+                                className="h-8 w-16 sm:w-20 text-sm font-mono text-center ml-auto rounded-lg bg-input border-0 focus:ring-2 focus:ring-primary"
+                              />
+                            ) : (
+                              <span
+                                className={cn("font-bold text-primary text-lg tabular-nums px-1.5 py-0.5 inline-block", editableCellClass)}
+                                onClick={() => startCellEdit(record, "labor_count")}
+                              >
+                                {record.labor_count}
+                              </span>
+                            )}
+                          </TableCell>
+                          {/* L, W, D */}
+                          {(["l", "w", "d"] as const).map((field) => (
+                            <TableCell key={field} className="text-right p-1 sm:p-2.5">
+                              {isEditingThis(record.id, field) ? (
+                                <Input
+                                  ref={inputRef}
+                                  type="number"
+                                  min="0"
+                                  value={cellValue}
+                                  onChange={(e) => setCellValue(e.target.value)}
+                                  onBlur={saveCell}
+                                  onKeyDown={handleKeyDown}
+                                  className="h-8 w-14 sm:w-16 text-sm font-mono text-center ml-auto rounded-lg bg-input border-0 focus:ring-2 focus:ring-primary"
+                                />
+                              ) : (
+                                <span
+                                  className={cn("font-mono text-sm tabular-nums text-card-foreground/60 px-1.5 py-0.5 inline-block", editableCellClass)}
+                                  onClick={() => startCellEdit(record, field)}
+                                >
+                                  {record[field] != null ? record[field] : "—"}
+                                </span>
+                              )}
+                            </TableCell>
+                          ))}
+                          {/* Qty (read-only) */}
+                          <TableCell className="text-right font-mono font-semibold text-card-foreground p-2.5 tabular-nums">
+                            {calcQuantity(record.labor_count, record.l, record.w, record.d).toLocaleString()}
+                          </TableCell>
+                          {/* Save indicator */}
+                          <TableCell className="p-1.5 w-8">
+                            <AnimatePresence>
+                              {savingRowId === record.id && (
+                                <motion.div
+                                  initial={{ opacity: 0, scale: 0.5 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  exit={{ opacity: 0, scale: 0.5 }}
+                                >
+                                  <Check className="w-4 h-4 text-green-500" strokeWidth={2} />
                                 </motion.div>
                               )}
-                            </TableCell>
-                          </motion.tr>
-                        );
-                      })}
+                            </AnimatePresence>
+                          </TableCell>
+                        </motion.tr>
+                      ))}
                     </AnimatePresence>
                   </TableBody>
                 </Table>
