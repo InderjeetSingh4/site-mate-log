@@ -13,7 +13,7 @@ import { BarChart, Bar, XAxis, YAxis } from "recharts";
 import { HardHat, Link2, LogOut, Users, Copy, Check, Settings, Download, ArrowLeftRight, History } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import SiteFolderSidebar, { type SiteFolder } from "@/components/SiteFolderSidebar";
-import { format, subDays, isAfter, startOfDay } from "date-fns";
+import { format, subDays } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
@@ -107,20 +107,28 @@ const Dashboard = () => {
 
   const totalLabor = useMemo(() => filteredRecords.reduce((s, r) => s + r.labor_count, 0), [filteredRecords]);
 
-  const last7Days = useMemo(() => {
-    const cutoff = startOfDay(subDays(new Date(), 6));
-    return filteredRecords.filter((r) => isAfter(new Date(r.date), cutoff) || startOfDay(new Date(r.date)).getTime() === cutoff.getTime());
+  const aggregatedByDate = useMemo(() => {
+    const map = new Map<string, number>();
+    filteredRecords.forEach((r) => {
+      map.set(r.date, (map.get(r.date) || 0) + r.labor_count);
+    });
+    return Array.from(map.entries())
+      .sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime())
+      .map(([date, labor]) => ({ date, labor }));
   }, [filteredRecords]);
 
-  const weeklyAvg = useMemo(() => {
-    if (last7Days.length === 0) return 0;
-    return Math.round(last7Days.reduce((s, r) => s + r.labor_count, 0) / last7Days.length);
-  }, [last7Days]);
-
   const chartData = useMemo(() => {
-    return last7Days.slice().sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .map((r) => ({ date: format(new Date(r.date), "dd MMM"), labor: r.labor_count }));
-  }, [last7Days]);
+    return aggregatedByDate.slice(-7).map((d) => ({
+      date: format(new Date(d.date), "dd MMM"),
+      labor: d.labor,
+    }));
+  }, [aggregatedByDate]);
+
+  const weeklyAvg = useMemo(() => {
+    const last7 = aggregatedByDate.slice(-7);
+    if (last7.length === 0) return 0;
+    return Math.round(last7.reduce((s, d) => s + d.labor, 0) / last7.length);
+  }, [aggregatedByDate]);
 
   const chartConfig = { labor: { label: "Labor Count", color: "hsl(var(--primary))" } };
   const selectedFolderName = selectedFolderId ? folders.find((f) => f.id === selectedFolderId)?.name : "All Sites";
