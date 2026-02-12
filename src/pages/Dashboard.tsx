@@ -208,7 +208,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       {/* Header — frosted glass */}
       <header className="border-b border-border/40 glass-strong sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
@@ -252,7 +252,7 @@ const Dashboard = () => {
         <main className="flex-1 px-4 sm:px-6 py-6 sm:py-8 space-y-5 sm:space-y-6 max-w-4xl w-full">
           {/* Folder label */}
           <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-2">
-            <h2 className="text-xl sm:text-2xl font-bold text-foreground">{selectedFolderName}</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground drop-shadow-sm">{selectedFolderName}</h2>
           </motion.div>
 
           {/* Stats — iOS widget style */}
@@ -269,17 +269,17 @@ const Dashboard = () => {
                 transition={{ delay: i * 0.05 }}
                 className="glass rounded-3xl p-4 sm:p-5 shadow-apple"
               >
-                <p className="text-[10px] sm:text-xs text-muted-foreground font-semibold uppercase tracking-wider">{s.label}</p>
-                <p className={cn("text-2xl sm:text-3xl font-bold mt-1.5 tracking-tight", s.highlight ? "text-primary" : "text-foreground")}>{s.value}</p>
+                <p className="text-[10px] sm:text-xs text-card-foreground/60 font-semibold uppercase tracking-wider">{s.label}</p>
+                <p className={cn("text-2xl sm:text-3xl font-bold mt-1.5 tracking-tight", s.highlight ? "text-primary" : "text-card-foreground")}>{s.value}</p>
               </motion.div>
             ))}
           </div>
 
           {/* Chart — glass card */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass rounded-3xl p-4 sm:p-6 shadow-apple">
-            <h2 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider mb-4 sm:mb-5">Site Strength (Last 7 Days)</h2>
+            <h2 className="font-semibold text-xs text-card-foreground/60 uppercase tracking-wider mb-4 sm:mb-5">Site Strength (Last 7 Days)</h2>
             {chartData.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8 text-sm">No data for the last 7 days.</p>
+              <p className="text-center text-card-foreground/50 py-8 text-sm">No data for the last 7 days.</p>
             ) : (
               <ChartContainer config={chartConfig} className="aspect-[2/1] w-full">
                 <BarChart data={chartData}>
@@ -295,7 +295,7 @@ const Dashboard = () => {
           {/* Link Generator */}
           {selectedFolderId && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-3xl p-4 sm:p-6 shadow-apple">
-              <h2 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider mb-4">
+              <h2 className="font-semibold text-xs text-card-foreground/60 uppercase tracking-wider mb-4">
                 Generate Entry Link <span className="text-primary">({selectedFolderName})</span>
               </h2>
               <div className="flex flex-col gap-3">
@@ -321,7 +321,7 @@ const Dashboard = () => {
           {/* Records Table — Numbers-style */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-3xl overflow-hidden shadow-apple">
             <div className="px-4 sm:px-6 py-4 border-b border-border/30 flex items-center justify-between gap-2">
-              <h2 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+              <h2 className="font-semibold text-xs text-card-foreground/60 uppercase tracking-wider flex items-center gap-2">
                 <Users className="w-4 h-4" strokeWidth={1.5} /> {showHistory ? "Past Records" : "Labour Records"}
               </h2>
               <div className="flex items-center gap-2">
@@ -342,9 +342,9 @@ const Dashboard = () => {
               </div>
             </div>
             {loading ? (
-              <div className="p-8 text-center text-muted-foreground text-sm">Loading records...</div>
+              <div className="p-8 text-center text-card-foreground/50 text-sm">Loading records...</div>
             ) : displayRecords.length === 0 ? (
-              <div className="p-8 sm:p-12 text-center text-muted-foreground text-sm">
+              <div className="p-8 sm:p-12 text-center text-card-foreground/50 text-sm">
                 {showHistory ? "No past records." : "No entries yet. Generate a link and share it."}
               </div>
             ) : (
@@ -352,13 +352,13 @@ const Dashboard = () => {
                 <Table>
                   <TableHeader>
                     <TableRow className="border-border/20 hover:bg-transparent">
-                      <TableHead className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-transparent sticky top-0">Date</TableHead>
-                      <TableHead className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-transparent sticky top-0 hidden sm:table-cell">Day</TableHead>
-                      <TableHead className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-transparent sticky top-0 text-right">Labour</TableHead>
-                      <TableHead className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-transparent sticky top-0 text-right">L</TableHead>
-                      <TableHead className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-transparent sticky top-0 text-right">W</TableHead>
-                      <TableHead className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-transparent sticky top-0 text-right">D</TableHead>
-                      <TableHead className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-transparent sticky top-0 text-right">Qty</TableHead>
+                      <TableHead className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-card-foreground/50 bg-transparent sticky top-0">Date</TableHead>
+                      <TableHead className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-card-foreground/50 bg-transparent sticky top-0 hidden sm:table-cell">Day</TableHead>
+                      <TableHead className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-card-foreground/50 bg-transparent sticky top-0 text-right">Labour</TableHead>
+                      <TableHead className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-card-foreground/50 bg-transparent sticky top-0 text-right">L</TableHead>
+                      <TableHead className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-card-foreground/50 bg-transparent sticky top-0 text-right">W</TableHead>
+                      <TableHead className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-card-foreground/50 bg-transparent sticky top-0 text-right">D</TableHead>
+                      <TableHead className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-card-foreground/50 bg-transparent sticky top-0 text-right">Qty</TableHead>
                       <TableHead className="w-14 bg-transparent sticky top-0"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -390,11 +390,11 @@ const Dashboard = () => {
                                   </PopoverContent>
                                 </Popover>
                               ) : (
-                                <span className="font-medium">{format(new Date(record.date), "dd MMM yyyy")}</span>
+                                <span className="font-medium text-card-foreground">{format(new Date(record.date), "dd MMM yyyy")}</span>
                               )}
                             </TableCell>
                             {/* Day */}
-                            <TableCell className="text-muted-foreground text-sm hidden sm:table-cell p-2.5">
+                            <TableCell className="text-card-foreground/60 text-sm hidden sm:table-cell p-2.5">
                               {isEditing && editState ? format(editState.date, "EEE") : format(new Date(record.date), "EEE")}
                             </TableCell>
                             {/* Labour */}
@@ -411,12 +411,12 @@ const Dashboard = () => {
                                 {isEditing ? (
                                   <Input type="number" min="0" value={editState![field]} onChange={(e) => setEditState({ ...editState!, [field]: e.target.value })} className="h-8 w-14 sm:w-16 text-sm font-mono text-center ml-auto rounded-lg bg-input border-0 focus:ring-2 focus:ring-primary" />
                                 ) : (
-                                  <span className="font-mono text-sm tabular-nums text-muted-foreground">{record[field] != null ? record[field] : "—"}</span>
+                                  <span className="font-mono text-sm tabular-nums text-card-foreground/60">{record[field] != null ? record[field] : "—"}</span>
                                 )}
                               </TableCell>
                             ))}
                             {/* Qty */}
-                            <TableCell className="text-right font-mono font-semibold text-foreground p-2.5 tabular-nums">
+                            <TableCell className="text-right font-mono font-semibold text-card-foreground p-2.5 tabular-nums">
                               {isEditing && editState
                                 ? calcQuantity(parseInt(editState.labor_count) || 0, editState.l ? parseFloat(editState.l) : null, editState.w ? parseFloat(editState.w) : null, editState.d ? parseFloat(editState.d) : null).toLocaleString()
                                 : calcQuantity(record.labor_count, record.l, record.w, record.d).toLocaleString()
