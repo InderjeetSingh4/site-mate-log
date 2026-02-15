@@ -5,37 +5,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { HardHat, Lock, UserPlus } from "lucide-react";
+import { HardHat, Lock } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [signupEnabled, setSignupEnabled] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      setIsLoggedIn(!!session);
       if (session) navigate("/select-ulb");
     };
     checkSession();
-
-    // Check if signup is still enabled globally
-    const checkSignup = async () => {
-      const { data } = await supabase
-        .from("app_config")
-        .select("signup_enabled")
-        .eq("id", "main")
-        .single();
-      if (data) setSignupEnabled(data.signup_enabled);
-    };
-    checkSignup();
   }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,29 +28,9 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: window.location.origin },
-        });
-        if (error) throw error;
-
-        // Disable signup globally after first registration
-        await supabase
-          .from("app_config")
-          .update({ signup_enabled: false })
-          .eq("id", "main");
-
-        toast({
-          title: "Check your email",
-          description: "A confirmation link has been sent to your email address.",
-        });
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        navigate("/select-ulb");
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      navigate("/select-ulb");
     } catch (error: any) {
       toast({
         title: "Error",
@@ -115,22 +80,10 @@ const Auth = () => {
               />
             </div>
             <Button type="submit" className="w-full font-medium" disabled={loading}>
-              {isSignUp ? <UserPlus className="w-4 h-4 mr-2" /> : <Lock className="w-4 h-4 mr-2" />}
-              {loading ? "Please wait..." : isSignUp ? "Sign Up" : "Sign In"}
+              <Lock className="w-4 h-4 mr-2" />
+              {loading ? "Please wait..." : "Sign In"}
             </Button>
           </form>
-
-          {!isLoggedIn && signupEnabled && (
-            <div className="mt-4 text-center">
-              <button
-                type="button"
-                onClick={() => setIsSignUp(!isSignUp)}
-                className="text-sm text-foreground hover:underline font-medium"
-              >
-                {isSignUp ? "Already have an account? Sign In" : "Don't have an account? Sign Up"}
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>
