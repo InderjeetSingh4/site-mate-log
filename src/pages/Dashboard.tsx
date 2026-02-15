@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis } from "recharts";
-import { HardHat, Link2, LogOut, Users, Copy, Check, Settings, Download, ArrowLeftRight, History } from "lucide-react";
+import { HardHat, Link2, LogOut, Users, Copy, Check, Settings, Download, ArrowLeftRight, History, Trash2 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import SiteFolderSidebar, { type SiteFolder } from "@/components/SiteFolderSidebar";
 import { format, subDays } from "date-fns";
@@ -252,12 +252,24 @@ const Dashboard = () => {
     if (e.key === "Escape") setEditingCell(null);
   };
 
+  const deleteRecord = async (id: string) => {
+    const { error } = await supabase.from("labor_records").delete().eq("id", id);
+    if (error) {
+      toast({ title: "Error deleting", description: mapDatabaseError(error), variant: "destructive" });
+    } else {
+      setRecords((prev) => prev.filter((r) => r.id !== id));
+    }
+  };
+
   const isEditingThis = (recordId: string, field: string) =>
     editingCell?.recordId === recordId && editingCell?.field === field;
 
   const editableCellClass = isOwner
     ? "cursor-pointer hover:bg-accent/40 rounded-lg transition-colors"
     : "";
+
+  const displayTotalLabor = useMemo(() => displayRecords.reduce((s, r) => s + r.labor_count, 0), [displayRecords]);
+  const displayTotalQty = useMemo(() => displayRecords.reduce((s, r) => s + calcQuantity(r.labor_count, r.l, r.w, r.d), 0), [displayRecords]);
 
   return (
     <div className="min-h-screen">
@@ -403,7 +415,7 @@ const Dashboard = () => {
                       <TableHead className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-card-foreground/50 bg-transparent sticky top-0 text-right">W</TableHead>
                       <TableHead className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-card-foreground/50 bg-transparent sticky top-0 text-right">D</TableHead>
                       <TableHead className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-card-foreground/50 bg-transparent sticky top-0 text-right">Qty</TableHead>
-                      <TableHead className="w-8 bg-transparent sticky top-0"></TableHead>
+                      <TableHead className="w-16 bg-transparent sticky top-0"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -494,23 +506,48 @@ const Dashboard = () => {
                           <TableCell className="text-right font-mono font-semibold text-card-foreground p-2.5 tabular-nums">
                             {calcQuantity(record.labor_count, record.l, record.w, record.d).toLocaleString()}
                           </TableCell>
-                          {/* Save indicator */}
-                          <TableCell className="p-1.5 w-8">
-                            <AnimatePresence>
-                              {savingRowId === record.id && (
-                                <motion.div
-                                  initial={{ opacity: 0, scale: 0.5 }}
-                                  animate={{ opacity: 1, scale: 1 }}
-                                  exit={{ opacity: 0, scale: 0.5 }}
+                          {/* Save indicator + Delete */}
+                          <TableCell className="p-1.5 w-16">
+                            <div className="flex items-center justify-end gap-1">
+                              <AnimatePresence>
+                                {savingRowId === record.id && (
+                                  <motion.div
+                                    initial={{ opacity: 0, scale: 0.5 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.5 }}
+                                  >
+                                    <Check className="w-4 h-4 text-green-500" strokeWidth={2} />
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                              {isOwner && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                  onClick={() => deleteRecord(record.id)}
                                 >
-                                  <Check className="w-4 h-4 text-green-500" strokeWidth={2} />
-                                </motion.div>
+                                  <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
+                                </Button>
                               )}
-                            </AnimatePresence>
+                            </div>
                           </TableCell>
                         </motion.tr>
                       ))}
                     </AnimatePresence>
+                    {/* Totals Row */}
+                    {displayRecords.length > 0 && (
+                      <TableRow className="border-t-2 border-border/40 bg-accent/20 hover:bg-accent/30 font-bold">
+                        <TableCell className="p-2.5 text-sm text-card-foreground">Total</TableCell>
+                        <TableCell className="hidden sm:table-cell p-2.5"></TableCell>
+                        <TableCell className="text-right p-2.5 text-primary text-lg tabular-nums font-bold">{displayTotalLabor}</TableCell>
+                        <TableCell className="text-right p-2.5"></TableCell>
+                        <TableCell className="text-right p-2.5"></TableCell>
+                        <TableCell className="text-right p-2.5"></TableCell>
+                        <TableCell className="text-right p-2.5 font-mono font-bold text-card-foreground tabular-nums">{displayTotalQty.toLocaleString()}</TableCell>
+                        <TableCell className="p-2.5 w-16"></TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </div>

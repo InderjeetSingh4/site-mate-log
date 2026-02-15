@@ -4,8 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -17,7 +16,7 @@ const SubmitEntry = () => {
   const { toast } = useToast();
 
   const [tokenValid, setTokenValid] = useState<boolean | null>(null);
-  const [date, setDate] = useState<Date>(new Date());
+  const [date] = useState<Date>(new Date());
   const [laborCount, setLaborCount] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -155,29 +154,15 @@ const SubmitEntry = () => {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label className="text-xs font-medium uppercase tracking-wider">Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-mono",
-                      !date && "text-foreground/60"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "dd MMM yyyy") : "Pick a date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={(d) => d && setDate(d)}
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
-                </PopoverContent>
-              </Popover>
+              <Button
+                variant="outline"
+                disabled
+                className="w-full justify-start text-left font-mono opacity-70 cursor-not-allowed"
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {format(date, "dd MMM yyyy")}
+              </Button>
+              <p className="text-[10px] text-muted-foreground">Today's date is locked for daily reporting.</p>
             </div>
 
             <div className="space-y-2">
