@@ -34,7 +34,7 @@ interface LaborRecord {
   quantity: number | null;
 }
 
-const BATCH_SIZE = 15;
+
 
 const calcQuantity = (labor: number, l: number | null, w: number | null, d: number | null) =>
   labor * (l || 1) * (w || 1) * (d || 1);
