@@ -92,18 +92,19 @@ const Dashboard = () => {
     if (!error && data) setFolders(data);
   };
 
+  const fifteenDaysAgo = useMemo(() => format(subDays(new Date(), 15), "yyyy-MM-dd"), []);
+
   const filteredRecords = useMemo(() => {
-    if (!selectedFolderId) return records;
-    return records.filter((r) => r.folder_id === selectedFolderId);
+    let recs = records;
+    if (selectedFolderId) recs = recs.filter((r) => r.folder_id === selectedFolderId);
+    return recs;
   }, [records, selectedFolderId]);
 
-  const currentBatch = useMemo(() => showHistory ? [] : filteredRecords.slice(-BATCH_SIZE), [filteredRecords, showHistory]);
-  const historyBatch = useMemo(() => {
-    if (!showHistory) return [];
-    const cutoff = filteredRecords.length - BATCH_SIZE;
-    return cutoff > 0 ? filteredRecords.slice(0, cutoff) : [];
-  }, [filteredRecords, showHistory]);
-  const displayRecords = showHistory ? historyBatch : currentBatch;
+  // Active = last 15 calendar days; Archive = older than 15 days
+  const activeRecords = useMemo(() => filteredRecords.filter((r) => r.date >= fifteenDaysAgo), [filteredRecords, fifteenDaysAgo]);
+  const archiveRecords = useMemo(() => filteredRecords.filter((r) => r.date < fifteenDaysAgo), [filteredRecords, fifteenDaysAgo]);
+
+  const displayRecords = showHistory ? archiveRecords : activeRecords;
 
   const totalLabor = useMemo(() => filteredRecords.reduce((s, r) => s + r.labor_count, 0), [filteredRecords]);
 
