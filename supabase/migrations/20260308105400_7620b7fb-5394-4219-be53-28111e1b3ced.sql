@@ -1,0 +1,1 @@
+ALTER TABLE public.labor_records ADD COLUMN cycle_batch_id text DEFAULT NULL;
