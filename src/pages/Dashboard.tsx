@@ -34,7 +34,7 @@ interface LaborRecord {
   quantity: number | null;
 }
 
-const BATCH_SIZE = 15;
+
 
 const calcQuantity = (labor: number, l: number | null, w: number | null, d: number | null) =>
   labor * (l || 1) * (w || 1) * (d || 1);
@@ -92,18 +92,19 @@ const Dashboard = () => {
     if (!error && data) setFolders(data);
   };
 
+  const fifteenDaysAgo = useMemo(() => format(subDays(new Date(), 15), "yyyy-MM-dd"), []);
+
   const filteredRecords = useMemo(() => {
-    if (!selectedFolderId) return records;
-    return records.filter((r) => r.folder_id === selectedFolderId);
+    let recs = records;
+    if (selectedFolderId) recs = recs.filter((r) => r.folder_id === selectedFolderId);
+    return recs;
   }, [records, selectedFolderId]);
 
-  const currentBatch = useMemo(() => showHistory ? [] : filteredRecords.slice(-BATCH_SIZE), [filteredRecords, showHistory]);
-  const historyBatch = useMemo(() => {
-    if (!showHistory) return [];
-    const cutoff = filteredRecords.length - BATCH_SIZE;
-    return cutoff > 0 ? filteredRecords.slice(0, cutoff) : [];
-  }, [filteredRecords, showHistory]);
-  const displayRecords = showHistory ? historyBatch : currentBatch;
+  // Active = last 15 calendar days; Archive = older than 15 days
+  const activeRecords = useMemo(() => filteredRecords.filter((r) => r.date >= fifteenDaysAgo), [filteredRecords, fifteenDaysAgo]);
+  const archiveRecords = useMemo(() => filteredRecords.filter((r) => r.date < fifteenDaysAgo), [filteredRecords, fifteenDaysAgo]);
+
+  const displayRecords = showHistory ? archiveRecords : activeRecords;
 
   const totalLabor = useMemo(() => filteredRecords.reduce((s, r) => s + r.labor_count, 0), [filteredRecords]);
 
@@ -132,7 +133,7 @@ const Dashboard = () => {
 
   const chartConfig = { labor: { label: "Labor Count", color: "hsl(var(--primary))" } };
   const selectedFolderName = selectedFolderId ? folders.find((f) => f.id === selectedFolderId)?.name : "All Sites";
-  const hasHistory = filteredRecords.length > BATCH_SIZE;
+  const hasHistory = archiveRecords.length > 0;
 
   const generateLink = async () => {
     setGenerating(true);
@@ -157,17 +158,17 @@ const Dashboard = () => {
   const handleLogout = async () => { await supabase.auth.signOut(); sessionStorage.removeItem("selected_ulb"); navigate("/auth"); };
   const handleSwitchUlb = () => { sessionStorage.removeItem("selected_ulb"); navigate("/select-ulb"); };
 
-  const exportCSV = () => {
-    if (filteredRecords.length === 0) return;
+  const exportCSV = (data: LaborRecord[], filenameSuffix: string) => {
+    if (data.length === 0) return;
     const header = "Date,Day,Labour Count,L,W,D,Quantity";
-    const rows = filteredRecords.map((r) => {
+    const rows = data.map((r) => {
       const d = new Date(r.date);
       return `${format(d, "dd/MM/yyyy")},${format(d, "EEEE")},${r.labor_count},${r.l ?? ""},${r.w ?? ""},${r.d ?? ""},${calcQuantity(r.labor_count, r.l, r.w, r.d)}`;
     });
     const blob = new Blob([[header, ...rows].join("\n")], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url;
-    a.download = `Site_Labour_Report_${format(new Date(), "dd-MM-yyyy")}.csv`;
+    a.download = `${filenameSuffix}_${format(new Date(), "dd-MM-yyyy")}.csv`;
     a.click(); URL.revokeObjectURL(url);
   };
 
@@ -388,9 +389,16 @@ const Dashboard = () => {
                     </Button>
                   </motion.div>
                 )}
-                {filteredRecords.length > 0 && (
+                {archiveRecords.length > 0 && (
                   <motion.div whileTap={{ scale: 0.98 }}>
-                    <Button variant="secondary" size="sm" onClick={exportCSV} className="font-semibold rounded-full text-xs h-8 px-3">
+                    <Button variant="secondary" size="sm" onClick={() => exportCSV(archiveRecords, "Archive_Report")} className="font-semibold rounded-full text-xs h-8 px-3">
+                      <Download className="w-3.5 h-3.5 mr-1 sm:mr-1.5" strokeWidth={1.5} /><span className="hidden sm:inline">Export Archive</span><span className="sm:hidden">Archive</span>
+                    </Button>
+                  </motion.div>
+                )}
+                {activeRecords.length > 0 && (
+                  <motion.div whileTap={{ scale: 0.98 }}>
+                    <Button variant="secondary" size="sm" onClick={() => exportCSV(activeRecords, "Active_Report")} className="font-semibold rounded-full text-xs h-8 px-3">
                       <Download className="w-3.5 h-3.5 mr-1 sm:mr-1.5" strokeWidth={1.5} /><span className="hidden sm:inline">Export</span><span className="sm:hidden">CSV</span>
                     </Button>
                   </motion.div>
