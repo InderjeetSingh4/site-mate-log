@@ -69,6 +69,7 @@ export type Database = {
       }
       labor_records: {
         Row: {
+          cycle_batch_id: string | null
           d: number | null
           date: string
           folder_id: string | null
@@ -82,6 +83,7 @@ export type Database = {
           w: number | null
         }
         Insert: {
+          cycle_batch_id?: string | null
           d?: number | null
           date: string
           folder_id?: string | null
@@ -95,6 +97,7 @@ export type Database = {
           w?: number | null
         }
         Update: {
+          cycle_batch_id?: string | null
           d?: number | null
           date?: string
           folder_id?: string | null
