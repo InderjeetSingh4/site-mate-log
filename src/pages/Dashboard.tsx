@@ -133,7 +133,7 @@ const Dashboard = () => {
 
   const chartConfig = { labor: { label: "Labor Count", color: "hsl(var(--primary))" } };
   const selectedFolderName = selectedFolderId ? folders.find((f) => f.id === selectedFolderId)?.name : "All Sites";
-  const hasHistory = filteredRecords.length > BATCH_SIZE;
+  const hasHistory = archiveRecords.length > 0;
 
   const generateLink = async () => {
     setGenerating(true);
@@ -158,17 +158,17 @@ const Dashboard = () => {
   const handleLogout = async () => { await supabase.auth.signOut(); sessionStorage.removeItem("selected_ulb"); navigate("/auth"); };
   const handleSwitchUlb = () => { sessionStorage.removeItem("selected_ulb"); navigate("/select-ulb"); };
 
-  const exportCSV = () => {
-    if (filteredRecords.length === 0) return;
+  const exportCSV = (data: LaborRecord[], filenameSuffix: string) => {
+    if (data.length === 0) return;
     const header = "Date,Day,Labour Count,L,W,D,Quantity";
-    const rows = filteredRecords.map((r) => {
+    const rows = data.map((r) => {
       const d = new Date(r.date);
       return `${format(d, "dd/MM/yyyy")},${format(d, "EEEE")},${r.labor_count},${r.l ?? ""},${r.w ?? ""},${r.d ?? ""},${calcQuantity(r.labor_count, r.l, r.w, r.d)}`;
     });
     const blob = new Blob([[header, ...rows].join("\n")], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url;
-    a.download = `Site_Labour_Report_${format(new Date(), "dd-MM-yyyy")}.csv`;
+    a.download = `${filenameSuffix}_${format(new Date(), "dd-MM-yyyy")}.csv`;
     a.click(); URL.revokeObjectURL(url);
   };
 
