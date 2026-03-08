@@ -389,9 +389,16 @@ const Dashboard = () => {
                     </Button>
                   </motion.div>
                 )}
-                {filteredRecords.length > 0 && (
+                {archiveRecords.length > 0 && (
                   <motion.div whileTap={{ scale: 0.98 }}>
-                    <Button variant="secondary" size="sm" onClick={exportCSV} className="font-semibold rounded-full text-xs h-8 px-3">
+                    <Button variant="secondary" size="sm" onClick={() => exportCSV(archiveRecords, "Archive_Report")} className="font-semibold rounded-full text-xs h-8 px-3">
+                      <Download className="w-3.5 h-3.5 mr-1 sm:mr-1.5" strokeWidth={1.5} /><span className="hidden sm:inline">Export Archive</span><span className="sm:hidden">Archive</span>
+                    </Button>
+                  </motion.div>
+                )}
+                {activeRecords.length > 0 && (
+                  <motion.div whileTap={{ scale: 0.98 }}>
+                    <Button variant="secondary" size="sm" onClick={() => exportCSV(activeRecords, "Active_Report")} className="font-semibold rounded-full text-xs h-8 px-3">
                       <Download className="w-3.5 h-3.5 mr-1 sm:mr-1.5" strokeWidth={1.5} /><span className="hidden sm:inline">Export</span><span className="sm:hidden">CSV</span>
                     </Button>
                   </motion.div>
