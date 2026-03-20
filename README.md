@@ -1,73 +1,57 @@
-# Welcome to your Lovable project
+# Site Stat | Civil Engineering Data & Labor Tracking
 
-## Project info
+> A high-performance, full-stack management system engineered to streamline real-time labor tracking and site analytics.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+Site Stat is a custom web application architected specifically for a civil engineering client. It replaces manual data entry with a secure, centralized dashboard that handles daily labor tracking, statistical analysis, and temporary access management for construction sites.
 
-## How can I edit this code?
+## ✨ Core Features
 
-There are several ways of editing your application.
+* **Real-Time Dashboard:** A comprehensive, high-level overview of daily site statistics and active workforce numbers.
+* **Labor Tracking System:** Efficient management and archival of labor data, allowing the client to monitor resources across different projects and shifts.
+* **Secure Backend Architecture:** Powered by Supabase to handle real-time database updates, secure authentication, and complex data relations.
+* **Responsive Field UI:** A clean, minimalist interface designed for seamless operation on both desktop office setups and mobile devices in the field.
 
-**Use Lovable**
+## 🛠 Technical Stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+Built with a focus on speed, security, and scalable data management:
 
-Changes made via Lovable will be committed automatically to this repo.
+* **Frontend:** React, Vite, TypeScript
+* **Styling:** Tailwind CSS, shadcn/ui
+* **Backend & Database:** Supabase (PostgreSQL, Auth, Row Level Security)
+* **Deployment & Hosting:** Vercel
 
-**Use your preferred IDE**
+## 💻 Local Development
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+To run this project locally, ensure you have Node.js installed on your machine.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 1. Clone the repository
+```bash
+git clone [https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git](https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git)
+cd YOUR_REPO_NAME
+```
 
-Follow these steps:
+### 2. Install dependencies
+```bash
+npm install
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### 3. Environment Variables
+Create a `.env` file in the root directory and add your Supabase credentials:
+```env
+VITE_SUPABASE_URL=your_supabase_url_here
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### 4. Start the development server
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The application will be available locally at `http://localhost:5173`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 🌍 Architecture & Deployment
 
-**Use GitHub Codespaces**
+This application is optimized for edge deployment on **Vercel**, ensuring fast load times and high availability. The backend relies on Supabase for robust Row Level Security (RLS) to ensure the client's civil engineering data and labor statistics remain strictly confidential.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+---
+*Architected and developed by Inderjeet Singh*
